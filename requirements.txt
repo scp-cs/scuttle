@@ -1,4 +1,4 @@
-﻿aiofiles==23.2.1
+aiofiles==23.2.1
 APScheduler==3.10.4
 attrs==25.3.0
 bcrypt==4.0.1
@@ -21,7 +21,7 @@ Flask-Discord==0.1.69
 Flask-Login==0.6.3
 Flask-WTF==1.2.2
 h11==0.16.0
-h2==4.1.0
+h2==4.3.0
 hpack==4.0.0
 hypercorn==0.14.4
 hyperframe==6.0.1
