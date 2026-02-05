@@ -1,9 +1,47 @@
 import datetime
 from peewee import *
+from logging import debug
 
 database = SqliteDatabase("data/scp.db")
 
 PAGE_ITEMS = 15
+
+# Creates the views that peewee doesn't support by executing raw SQL
+def create_views(database: SqliteDatabase):
+    debug("Creating database views")
+
+    # TODO: This is so fucking horrible like what am I even looking at whz did I write this
+
+    database.execute_sql("CREATE VIEW IF NOT EXISTS Frontpage AS\
+    SELECT User.id AS id, User.nickname AS nickname, User.discord AS discord, User.wikidot AS wikidot, User.display_name as display, \
+        SUM(CASE WHEN Article.is_original=FALSE THEN 1 ELSE 0 END) AS translation_count, \
+        (SUM(CASE WHEN Article.is_original=FALSE THEN Article.words ELSE 0 END)/1000.0)+TOTAL(Article.bonus) AS points,\
+        (SELECT COUNT(article_id) FROM Correction WHERE Corrector=User.id) AS correction_count,\
+        SUM(CASE WHEN Article.is_original=TRUE THEN 1 ELSE 0 END) AS original_count\
+            FROM user\
+                LEFT JOIN Article \
+                    ON User.id = Article.idauthor\
+            GROUP BY User.id;")
+    
+    database.execute_sql("CREATE VIEW IF NOT EXISTS Series AS \
+        SELECT (SUBSTR(name, 5)/1000)+1 AS series, COUNT(id) AS articles, SUM(words) AS words \
+            FROM Article \
+            WHERE (name \
+                LIKE 'SCP-___' OR name LIKE 'SCP-____') AND is_original=FALSE \
+            GROUP BY SERIES\
+        UNION\
+        SELECT 999 AS series, COUNT(id) AS articles, SUM(words) AS words\
+            FROM Article\
+            WHERE name\
+                NOT LIKE 'SCP-___' AND name NOT LIKE 'SCP-____' AND is_original=FALSE;")
+    
+    database.execute_sql("CREATE VIEW IF NOT EXISTS Statistics AS\
+        SELECT SUM(t.words) AS total_words, COUNT(t.id) AS total_articles, (SELECT COUNT(id) FROM user) AS total_users\
+            FROM Article AS t WHERE t.is_original=FALSE;")
+    
+    database.execute_sql("CREATE VIEW IF NOT EXISTS Correction AS\
+        SELECT id as article_id, idauthor AS author, idcorrector AS corrector, corrected AS timestamp, words, name\
+            FROM Article WHERE idcorrector IS NOT NULL;")
 
 class BaseModel(Model):
     class Meta:
@@ -188,7 +226,7 @@ class Frontpage(ViewModel):
 models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki]
 
 def last_update() -> datetime.datetime:
-    return Article.select(fn.MAX(Article.added)).scalar()
+    return Article.select(fn.MAX(Article.added)).scalar() or datetime.datetime(year=1990, month=1, day=1)
 
 def get_frontpage(sort: str, page: int):
     entries = Frontpage.select().join(User).limit(PAGE_ITEMS).offset(PAGE_ITEMS*page)

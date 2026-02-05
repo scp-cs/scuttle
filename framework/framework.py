@@ -19,6 +19,7 @@ def render_template_file(file: str | bytes | os.PathLike, **context: Any) -> str
         error(f"Error rendering template: {str(e)}")
         return None
     except BuildError as e:
+        # TODO: Change the error message here
         error(f"Failed to build menu: Invalid handler ({str(e)})")
     except Exception as e:
         error(f"Failed to open template file {file}: {str(e)}")

@@ -157,8 +157,9 @@ if __name__ == '__main__':
     init_logger()
 
     # Load config file or create it if there isn't one
-    ensure_config('config.json')
-    app.config.from_file('config.json', json.load)
+    if not ensure_config('config.json') or not app.config.from_file('config.json', json.load):
+        critical("Config file is inaccessible, malformed or could not be created")
+        exit(1)
 
     # Set debug logging level before doing anything else
     if app.config['DEBUG']:
@@ -166,6 +167,10 @@ if __name__ == '__main__':
 
     # Ensure we have a directory to store the avatar thumbnails
     makedirs('./temp/avatar', exist_ok=True)
+
+    # Create a data directory if it doesn't exist
+    # Regular mkdir doesn't have the exist_ok option for whatever reason
+    makedirs('./data', exist_ok=True)
 
     # Store all the singleton classes in config to access them from blueprints
     app.config['scheduler'] = sched
@@ -194,11 +199,13 @@ if __name__ == '__main__':
     app.register_blueprint(AutobackupController)
     app.register_blueprint(EmbedController)
 
+    # Initialize the database
+    db.database.connect()
+    db.database.create_tables(db.models)
+    db.create_views(db.database)
+
     # Create the admin user
     user_init()
-
-    # Initialize the database
-    db.database.create_tables(db.models)
 
     # Generate signing keys
     if not generate_signing_keys():

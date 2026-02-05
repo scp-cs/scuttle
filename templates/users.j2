@@ -33,8 +33,8 @@
     </thead>
     <tbody id="ut-body" class="transition-all">
         {% for entry in users %}
-        <tr class="h-10 md:p-4 usr-row" id="u-{{entry.user.id}}">
-            <td data-label="Přezdívka">{{ entry.user.nickname }}</td>
+        <tr class="h-10 md:p-4 usr-row hover:bg-white/10 hover:border-white/20 hover:border transition-all rounded-md" id="u-{{entry.user.id}}" onclick="window.location.href='/user/{{entry.user.id}}'">
+            <td data-label="Přezdívka" class="rounded-l-md">{{ entry.user.nickname }}</td>
             <td data-label="Discord ID">
             {% if entry.user.discord %}
             <img class="w-8 h-8 rounded-[50%] inline md:mr-4" src={{ url_for('UserContent.get_avatar', uid=(entry.user.discord or 0), s='thumb') }}>
@@ -43,10 +43,7 @@
             <td data-label="Počet překladů">{{ entry.translation_count }}</td>
             <td data-label="Počet korekcí">{{ entry.correction_count }}</td>
             <td data-label="Počet bodů">{{ "%.1f" % entry.points }}</td>
-            <td data-label="Role">{{role_badge(entry.points)}}</td>
-            <td class="flex flex-col md:table-row">
-                <a class="inline-block w-full mb-2 md:inline md:w-auto md:mb-0" href="{{url_for('UserController.user', uid=entry.user.id)}}"><i class="text-3xl transition-opacity bi bi-eye opacity-40 hover:opacity-100"></i></a>
-            </td>
+            <td data-label="Role" class="rounded-r-md pr-3">{{role_badge(entry.points)}}</td>
         </tr>
         {% endfor %}
     </tbody>

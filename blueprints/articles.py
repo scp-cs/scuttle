@@ -25,7 +25,7 @@ def check_role_and_notify(uid, point_amount):
     next_role = get_role(current_points + point_amount)
     if current_role != next_role:
         if promoted_user.discord:
-            webhook.send_text(f'Uživatel {promoted_user.nickname} (<@{promoted_user.discord}>) dosáhl hranice pro roli {next_role['name']}!')
+            webhook.send_text(f'Uživatel {promoted_user.nickname} (<@{promoted_user.discord}>) dosáhl hranice pro roli {next_role["name"]}!')
 
 @ArticleController.route('/article/<int:aid>/delete', methods=["POST"])
 @login_required

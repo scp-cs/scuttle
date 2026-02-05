@@ -37,7 +37,8 @@ thead {
 
 tr {
   @apply flex flex-col h-auto w-full px-3 py-2 my-4 items-end shadow-2xl border-gray-500 !important;
-  @apply md:table-row md:h-10 md:p-4 md:border-none md:shadow-none md:bg-transparent !important;
+  @apply md:table-row md:h-10 md:shadow-none !important;
+  @apply md:bg-transparent md:border-none;
 }
 
 td {
