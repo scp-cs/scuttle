@@ -53,5 +53,7 @@ $(function() {
         setTimeout(() => {$("#btn-copy-code").text("Zkopírovat kód")}, 1000)
     })
     new ClipboardJS('.clip-copy')
+    $('#sel-type option[value="translator"]').prop('selected', true)
+    $('#sel-theme option[value="default"]').prop('selected', true)
     generateWikidotSource()
 })
