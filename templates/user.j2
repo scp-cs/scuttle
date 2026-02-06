@@ -28,8 +28,10 @@
             </div>
             <p class="mt-1 text-xl"><b>Celkem překladů:</b> {{stats.translation_count}}</p>
             
-            {% if current_user.is_authenticated %}
+            
             <div class="flex flex-col gap-1 my-3 md:flex-row md:my-2 align-center">
+                <a href="{{url_for('EmbedController.user_badge_preview', uid=user.id)}}" class="glass-btn"><i class="mr-2 text-2xl bi bi-person-badge"></i>Vytvořit odznak</a>
+                {% if current_user.is_authenticated %}
                 <a href="{{url_for('ArticleController.add_article', uid=user.id)}}" class="glass-btn"><i class="mr-2 text-2xl bi bi-file-earmark-plus"></i>Přidat překlad</a>
                 <button class="glass-btn" onclick="articlePickerOpen()"><i class="mr-2 text-2xl bi bi-file-earmark-check"></i>Přidat korekci</button>
                 <a href="{{url_for('ArticleController.add_article', uid=user.id, original=1)}}" class="glass-btn"><i class="mr-2 text-2xl bi bi-file-earmark-text"></i>Přidat článek</a>
@@ -43,8 +45,9 @@
                 {% else %}
                   <a class="glass-btn bg-red-500/10 hover:bg-red-500/20" href="{{url_for('UserController.revoke_admin_perms', uid=user.id)}}"><i class="mr-2 text-2xl bi bi-person-fill-slash"></i>Odebrat administrátorská práva</a>
                 {% endif %}
+                {% endif %}
             </div>
-            {% endif %}
+            
         </div>
     </div>
 </div>
