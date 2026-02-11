@@ -1,4 +1,4 @@
-﻿aiofiles==23.2.1
+aiofiles==23.2.1
 APScheduler==3.10.4
 attrs==25.3.0
 bcrypt==4.0.1
@@ -40,7 +40,7 @@ oauthlib==3.2.2
 packaging==25.0
 peewee==3.18.1
 PGPy==0.6.0
-pillow==11.2.1
+pillow==12.1.1
 priority==2.0.0
 psutil==7.0.0
 py7zr==1.0.0
