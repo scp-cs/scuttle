@@ -9,11 +9,15 @@ from flask import Flask
 from enum import IntEnum
 from typing import Optional
 from collections import deque
+from urllib.parse import urlparse, urlunparse
 
 # Internal
 from db import User, Article, last_update
+import connectors.wikidotsite as wikidotsite
+from utils import config_has_key
 
 # External
+import requests
 import feedparser
 from peewee import fn
 
@@ -29,8 +33,6 @@ PAGE_RENAME = 'přesunout/přejmenovat stránku' # This text in the title indica
 CORRECTION_COMPLETE = 'Odstraněné štítky: korekce'
 IGNORE_BRANCH_TAG = '-cs' # Ignore new pages that start with this tag, doesn't work for tales but I don't really care
 TIMEZONE_UTC_OFFSET = timedelta(hours=2)
-
-USER_AGENT = "SCUTTLE Crawler (https://scp-wiki.cz, v1)"
 
 class RSSUpdateType(IntEnum):
     RSS_NEWPAGE = 0
@@ -55,12 +57,22 @@ class RSSMonitor:
         self.__links = links
         self.__updates = list() #TODO: Make this a dict indexed by the GUID
         self.__finished_guids = deque(maxlen=255)
+        # Maps domains to the names of wikis translated from
+        self.__source_wiki_map = {}
+        self.__save_snapshots = False
 
     def init_app(self, app: Flask) -> None:
-        if 'RSS_MONITOR_CHANNELS' not in app.config:
+        if 'MONITORED_WIKIS' not in app.config:
             warning('RSSMonitor has no endpoints!')
             return
-        self.__links = app.config['RSS_MONITOR_CHANNELS']
+        self.__save_snapshots = config_has_key(app.config, "BACKUP.save_snapshots", check_true=True)
+        for wiki in app.config['MONITORED_WIKIS']:
+            self.__links.append(wiki['feed_url'])
+            if self.__save_snapshots and 'source_wiki' in wiki:
+                wiki_url_base = urlparse(wiki['feed_url']).netloc
+                self.__source_wiki_map[wiki_url_base] = wiki['source_wiki']
+        if self.__save_snapshots:
+            debug(f"Mapped source wikis: {self.__source_wiki_map}")
         self.__webhook = app.config['webhook']
 
         info(f'Loaded {len(self.__links)} RSSMonitor endpoints from config')
@@ -115,21 +127,33 @@ class RSSMonitor:
     @staticmethod
     def get_rss_update_timestamp(update: dict) -> datetime:
         return datetime.strptime(update['published'], "%a, %d %b %Y %H:%M:%S +%f")
+    
+    @staticmethod
+    def get_update_revision(update: dict) -> int:
+        return update['guid'].split('#')[1].removeprefix("revision-")
 
     def _process_new_page(self, update) -> bool:
         timestamp = RSSMonitor.get_rss_update_timestamp(update)
         title = RSSMonitor.get_rss_update_title(update)
         author = self.get_rss_update_author(update)
+        revision = RSSMonitor.get_update_revision(update)
+        link = update['link']
+
+        if self.__save_snapshots:
+            source_wiki = urlparse(link).netloc
+            if wikidotsite.source_page_exists(link, self.__source_wiki_map[source_wiki]):
+                wikidotsite.snapshot_original(link, revision_id=revision, source_wiki_name=self.__source_wiki_map[source_wiki])
+
         if not author:
             info(f'Ignoring {title} in RSS feed (couldn\'t match wikidot username {author} to a user)')
             return False
         debug(f'Check {title} with ts {timestamp}, last db update was {last_update()}')
         
         if timestamp+TIMEZONE_UTC_OFFSET > last_update():
-            if RSSMonitor.find_link(update['link']):
+            if RSSMonitor.find_link(link):
                 info(f'Ignoring {title} in RSS feed (added manually)')
                 return False
-            self.__updates.append(RSSUpdate(timestamp+TIMEZONE_UTC_OFFSET, update['link'], title, author, uuid4(), RSSUpdateType.RSS_NEWPAGE))
+            self.__updates.append(RSSUpdate(timestamp+TIMEZONE_UTC_OFFSET, link, title, author, uuid4(), RSSUpdateType.RSS_NEWPAGE))
             return True
         return False
 

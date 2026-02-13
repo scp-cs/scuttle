@@ -34,6 +34,14 @@ class PortainerConnector():
     """
     __initialized = False
 
+    def requires_init(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            if not getattr(self, '__initialized', False):
+                raise PortainerError("Not Initialized")
+            return func(self, *args, **kwargs)
+        return wrapper
+    
     def requires_auth(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -41,7 +49,7 @@ class PortainerConnector():
                 raise PortainerError('No Portainer URL')
             if not hasattr(self, '_jwt'):
                 raise PortainerError(f"Not logged in")
-            return func(self, *args, **kwargs)
+            return PortainerConnector.requires_init(func(self, *args, **kwargs))
         return wrapper
 
     def init_app(self, app: Flask):
@@ -92,6 +100,7 @@ class PortainerConnector():
         """
         return self.__initialized
 
+    @requires_init
     def login(self, user: str = None, password: str = None):
         """
         Logs in to portainer and saves the access token. If no credentials are specified, those loaded from config are used.
