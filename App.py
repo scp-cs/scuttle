@@ -101,8 +101,15 @@ def extensions_init() -> None:
     login_manager.init_app(app)
 
     # Checking if we can enable Discord Login
-    if config_has_key(app.config, 'DISCORD.CLIENT_ID') and config_has_key(app.config, 'DISCORD.CLIENT_SECRET'):
-        app.config['OAUTH_ENABLE'] = app.config['DISCORD'].get('LOGIN_ENABLE')
+    if config_has_key(app.config, 'DISCORD.CLIENT_ID')\
+        and config_has_key(app.config, 'DISCORD.CLIENT_SECRET')\
+        and config_has_key(app.config, 'DISCORD.REDIRECT_URI'):
+        
+        app.config['OAUTH_ENABLE'] = app.config['DISCORD'].get('LOGIN_ENABLE', True)
+        # Set the config keys that the OAuth extension requires
+        app.config['DISCORD_CLIENT_ID'] = app.config['DISCORD']['CLIENT_ID']
+        app.config['DISCORD_CLIENT_SECRET'] = app.config['DISCORD']['CLIENT_SECRET']
+        app.config['DISCORD_REDIRECT_URI'] = app.config['DISCORD']['REDIRECT_URI']
     else:
         warning('OAuth App ID or secret not set, Discord login disabled')
         app.config['OAUTH_ENABLE'] = False
