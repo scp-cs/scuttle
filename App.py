@@ -80,13 +80,8 @@ def user_init() -> None:
         warning(f"Initial user {init_user} already exists")
         return
     info(f"Adding initial user {init_user}")
-    admin = User()
-    admin.nickname = init_user
-    admin.password = pw_hash(init_password)
+    admin = User.create(nickname=init_user, password=pw_hash(init_password), discord="", wikidot="")
     # TODO: Do something with this id
-    admin.discord = ""
-    admin.wikidot = ""
-    admin.save()
 
 def extensions_init() -> None:
     """

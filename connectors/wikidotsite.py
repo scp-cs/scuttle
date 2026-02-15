@@ -2,6 +2,7 @@
 from typing import Optional
 from os import path, PathLike, getcwd
 from logging import info, error, warning, debug
+import re
 
 # Internal
 from db import Article
@@ -44,7 +45,8 @@ def get_site_slug(url: str) -> str:
     path = parsed_url.path
     return path.removeprefix('/')
 
-def snapshot_original(url: str, source_wiki_name: str = "scp-wiki", revision_id: int = 0, client: wikidot.Client = None, fail_on_not_found: bool = True) -> Optional[PathLike]:
+def snapshot_original(url: str, source_wiki_name: str = "scp-wiki",\
+                       revision_id: int = 0, client: Optional[wikidot.Client] = None, fail_on_not_found: bool = True) -> Optional[PathLike | str]:
     """
     Downloads a copy of a page's original on the source wiki, saves it to the temp directory and returns the path
 
@@ -82,12 +84,18 @@ def map_target_wiki_to_source() -> dict[str, str]:
 def snapshot_all():
     translations = Article.select(Article.link, Article.name).where(Article.is_original == False).execute()
     wiki_map = map_target_wiki_to_source()
+    # I'm not adding an entire library just to validate a URL bro
+    url_regex = re.compile(r"^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$", re.IGNORECASE)
     client = wikidot.Client()
     for tr in translations:
         target_wiki_name = parse.urlparse(tr.link).netloc.split('.')[0]
         source_wiki_name = wiki_map[target_wiki_name]
         link = str(tr.link)
         name = str(tr.name)
+
+        if not link or not url_regex.match(link):
+            info(f"Skipping {name}, invalid URL")
+            continue
         
         # We check if we haven't already backed this one up
         if path.isfile(path.join(getcwd(), 'temp', 'snapshots', source_wiki_name, get_site_slug(link)+'-0.txt')): 
@@ -99,7 +107,11 @@ def snapshot_all():
         #if not source_page_exists(link, source_wiki_name): 
         #    info(f"Skipping {name} (source page not found)")
         #    continue
-        info(f"Making snapshot of \"{name}\"")
-        file_path = snapshot_original(link, source_wiki_name, client=client, fail_on_not_found=False)
-        info(f"Snapshot saved as {file_path}")
+        try:
+            info(f"Making snapshot of \"{name}\"")
+            file_path = snapshot_original(link, source_wiki_name, client=client, fail_on_not_found=False)
+        except Exception as e:
+            warning(f"Skipping {name}, error while downloading snapshot ({str(e)})")
+        else:
+            info(f"Snapshot saved as {file_path}")
 
