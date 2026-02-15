@@ -85,18 +85,21 @@ def snapshot_all():
     translations = Article.select(Article.link, Article.name).where(Article.is_original == False).execute()
     wiki_map = map_target_wiki_to_source()
     # I'm not adding an entire library just to validate a URL bro
-    url_regex = re.compile(r"^https?:\\/\\/(?:www\\.)?[-a-zA-Z0-9@:%._\\+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b(?:[-a-zA-Z0-9()@:%_\\+.~#?&\\/=]*)$", re.IGNORECASE)
+    url_regex = re.compile(r"^(http|https):\/\/[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(/[a-zA-Z0-9\-._~:/?#[\]@!$&'()*+,;=]*)?$", re.IGNORECASE)
     client = wikidot.Client()
     for tr in translations:
-        target_wiki_name = parse.urlparse(tr.link).netloc.split('.')[0]
-        source_wiki_name = wiki_map[target_wiki_name]
         link = str(tr.link)
         name = str(tr.name)
+        target_wiki_name = parse.urlparse(link).netloc.split('.')[0]  
+        
+        # info(f"URL is {link}")
 
-        if not link or not url_regex.match(link):
+        if not link or not url_regex.match(link) or not target_wiki_name:
             info(f"Skipping {name}, invalid URL")
             continue
         
+        source_wiki_name = wiki_map[target_wiki_name]
+
         # We check if we haven't already backed this one up
         if path.isfile(path.join(getcwd(), 'temp', 'snapshots', source_wiki_name, get_site_slug(link)+'-0.txt')): 
             info(f"Skipping {name}, file exists")
