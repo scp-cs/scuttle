@@ -20,8 +20,8 @@ function updatePreviewURL() {
 function generateWikidotSource() {
     const text = `[[include :scp-cs:component:scuttle-embed
 |user= ${userId}
-|type= ${themeSelect.val()}
-|theme= ${typeSelect.val()}
+|type= ${typeSelect.val()}
+|theme= ${themeSelect.val()}
 ]]`
     $("#ta-wikidot-code").text(text)
 }
