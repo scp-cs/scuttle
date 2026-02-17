@@ -12,31 +12,32 @@
     <div class="flex flex-row flex-wrap gap-4">
         <div class="button-group">
             <h1 class="text-lg font-bold">Metadata</h1>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.updaterss')}}"><i class="mr-2 text-lg bi bi-rss"></i><p class="select-none">Vynutit aktualizaci RSS</p></a>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.avdownload')}}"><i class="mr-2 text-lg bi bi-image"></i><p class="select-none">Vynutit aktualizaci avatarů</p></a>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.nickupdate')}}"><i class="mr-2 text-lg bi bi-person"></i><p class="select-none">Vynutit aktualizaci uživatelů</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.updaterss')}}"><i class="mr-2 text-lg bi bi-rss"></i><p class="select-none">Vynutit aktualizaci RSS</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.avdownload')}}"><i class="mr-2 text-lg bi bi-image"></i><p class="select-none">Vynutit aktualizaci avatarů</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.nickupdate')}}"><i class="mr-2 text-lg bi bi-person"></i><p class="select-none">Vynutit aktualizaci uživatelů</p></a>
         </div>
         <div class="button-group">
             <h1 class="text-lg font-bold">Databáze</h1>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.export_database')}}"><i class="mr-2 text-lg bi bi-database"></i><p class="select-none">Exportovat databázi</p></a>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.export_pubkey')}}"><i class="mr-2 text-lg bi bi-key"></i><p class="select-none">Exportovat veřejný klíč</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.export_database')}}"><i class="mr-2 text-lg bi bi-database"></i><p class="select-none">Exportovat databázi</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.export_pubkey')}}"><i class="mr-2 text-lg bi bi-key"></i><p class="select-none">Exportovat veřejný klíč</p></a>
         </div>
         <div class="button-group">
             <h1 class="text-lg font-bold">Zálohy</h1>
-            <div class="glass-btn w-fit"><i class="mr-2 text-lg bi bi-key"></i><p class="select-none">Otestovat přihlášení k Portaineru</p></div>
-            <div class="btn-danger w-fit"><i class="mr-2 text-lg bi bi-exclamation-triangle"></i><p class="select-none">Vynutit start WikiComma kontejneru</p></div>
-            <div class="btn-danger w-fit"><i class="mr-2 text-lg bi bi-exclamation-triangle"></i><p class="select-none">Ukončit WikiComma kontejner</p></div>
-            <a class="btn-danger w-fit"  href="{{url_for('DebugTools.force_end_backup')}}"><i class="mr-2 text-lg bi bi-exclamation-triangle"></i><p class="select-none">Označit všechny zálohy jako ukončené</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.test_portainer_login')}}"><i class="mr-2 text-lg bi bi-key"></i><p class="select-none">Otestovat přihlášení k Portaineru</p></a>
+            <a class="btn-danger w-fit" href="{{url_for('DebugToolsController.start_wikicomma_container')}}"><i class="mr-2 text-lg bi bi-exclamation-triangle"></i><p class="select-none">Vynutit start WikiComma kontejneru</p></a>
+            <a class="btn-danger w-fit" href="{{url_for('DebugToolsController.kill_wikicomma_container')}}"><i class="mr-2 text-lg bi bi-exclamation-triangle"></i><p class="select-none">Ukončit WikiComma kontejner</p></a>
+            <a class="btn-danger w-fit"  href="{{url_for('DebugToolsController.force_end_backup')}}"><i class="mr-2 text-lg bi bi-exclamation-triangle"></i><p class="select-none">Označit všechny zálohy jako ukončené</p></a>
+            <a class="btn-danger w-fit"  href="{{url_for('DebugToolsController.make_all_snapshots')}}"><i class="mr-2 text-lg bi bi-exclamation-triangle"></i><p class="select-none">Vytvořit snímky všech překladů</p></a>
         </div>
         <div class="button-group">
             <h1 class="text-lg font-bold">Discord</h1>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.webhook_testing')}}"><i class="mr-2 text-lg bi bi-discord"></i><p class="select-none">Otestovat webhook</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.webhook_testing')}}"><i class="mr-2 text-lg bi bi-discord"></i><p class="select-none">Otestovat webhook</p></a>
         </div>
         <div class="button-group">
             <h1 class="text-lg font-bold">Error Handling</h1>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.raise_error')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Simulovat chybu</p></a>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.raise_critical_error')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Simulovat kritickou chybu</p></a>
-            <a class="glass-btn w-fit" href="{{url_for('DebugTools.raise_unhandled')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Debugger</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.raise_error')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Simulovat chybu</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.raise_critical_error')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Simulovat kritickou chybu</p></a>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.raise_unhandled')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Debugger</p></a>
         </div>
     </div>
 </div>

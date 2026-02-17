@@ -15,7 +15,7 @@
     </span>
     <hr class="mb-4 border-white">
     <div class="flex flex-row items-center w-full ">
-        <img class="hidden mr-6 bg-white border-2 border-white max-h-48 rounded-xl md:block " src="{{ url_for('UserContent.get_avatar', uid=(user.discord or 0), s='full')}}">
+        <img class="hidden mr-6 bg-white border-2 border-white max-h-48 rounded-xl md:block " src="{{ url_for('ContentController.get_avatar', uid=(user.discord or 0), s='full')}}">
         <div>
             <p id='desc-iduser' class="my-1 text-xl"><b>ID:</b> {{user.id}}</p>
             <p class="my-1 text-xl"><b>Wikidot ID:</b> <a class="hover:text-blue-500" target="_blank" href="https://www.wikidot.com/user:info/{{user.wikidot | replace(' ', '-')}}/">{{user.wikidot}}</a></p>

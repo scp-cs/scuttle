@@ -3,17 +3,17 @@ menu:
         text: "Přihlásit se"
         icon: "bi-box-arrow-in-right"
         auth: "unauthorized_only"
-        handler: "UserAuth.login"
+        handler: "AuthController.login"
     - logout:
         text: "Odhlásit se"
         icon: "bi-escape"
         auth: "authorized"
-        handler: "UserAuth.logout"
+        handler: "AuthController.logout"
     - leaderboard:
         text: "Žebříček překladatelů"
         icon: "bi-trophy"
         auth: "unauthorized"
-        handler: "index"
+        handler: "LeaderboardController.index"
     - leaderboard:
         text: "Statistiky"
         icon: "bi-bar-chart"
@@ -38,9 +38,9 @@ menu:
         text: "Nástroje pro techniky"
         icon: "bi-braces"
         auth: "authorized"
-        handler: "DebugTools.debug_index"
+        handler: "DebugToolsController.debug_index"
     - pwchange:
         text: "Změnit heslo"
         icon: "bi-key"
         auth: "authorized"
-        handler: "UserAuth.pw_change"
+        handler: "AuthController.pw_change"

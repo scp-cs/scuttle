@@ -1,11 +1,11 @@
 from flask import Blueprint, send_from_directory, request
 from os import path, getcwd
 
-UserContent = Blueprint('UserContent', __name__)
+ContentController = Blueprint('ContentController', __name__)
 
 PROFILE_DIR = path.join(getcwd(), 'temp', 'avatar')
 
-@UserContent.route('/content/avatar/<int:uid>')
+@ContentController.route('/content/avatar/<int:uid>')
 def get_avatar(uid: int):
     if path.exists(path.join('temp', 'avatar', f'{str(uid)}.png')): 
         if request.args.get('s', default='full', type=str) == 'thumb':
