@@ -59,7 +59,8 @@ cd translatordb_web
         "BACKUP_COMMON_PATH": [PATH],
         "BACKUP_ARCHIVE_PATH": [PATH],
         "WIKICOMMA_CONFIG_PATH": [PATH],
-        "START_CMD": [WIKICOMMA START COMMAND]
+        "START_CMD": [WIKICOMMA START COMMAND],
+        "save_snapshots": [true / false]
     }
 }
 ```

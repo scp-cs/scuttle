@@ -146,7 +146,7 @@ class DiscordWebhook():
         self.notify = notify
 
     def init_app(self, app):
-        self.url = app.config['DISCORD_WEBHOOK_URL']
+        self.url = app.config['WEBHOOK']['WEBHOOK_URL']
         self.notify = app.config['DISCORD_ROLEMASTER_ID']
         self.mock = app.config.get("DEBUG_DISABLE_WEBHOOKS", False) and app.config.get("DEBUG", False)
 

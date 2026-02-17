@@ -5,10 +5,10 @@
     <div>
         <div class="inline-flex flex-col items-center w-full px-10 py-5 mb-8 border rounded-md shadow-2xl backdrop-blur-sm bg-white/5 border-slate-900 md:mt-4 md:w-auto md:flex-row">
         <h2 class="text-lg font-bold md:mr-6">Řadit:</h2>
-        <a href="{{url_for('index', sort='az')}}" class="sorter-button">A-Z</a>
-        <a href="{{url_for('index', sort='count')}}" class="sorter-button">Počet článků</a>
-        <a href="{{url_for('index', sort='points')}}" class="sorter-button">Počet bodů</a>
-        <a href="{{url_for('index', sort='corrections')}}" class="sorter-button">Počet korekcí</a>
+        <a href="{{url_for('LeaderboardController.index', sort='az')}}" class="sorter-button">A-Z</a>
+        <a href="{{url_for('LeaderboardController.index', sort='count')}}" class="sorter-button">Počet článků</a>
+        <a href="{{url_for('LeaderboardController.index', sort='points')}}" class="sorter-button">Počet bodů</a>
+        <a href="{{url_for('LeaderboardController.index', sort='corrections')}}" class="sorter-button">Počet korekcí</a>
         </div>
         
         <div class="inline-block w-full px-4 mb-6 ml-3 text-center text-black border rounded-md shadow-2xl bg-white/5 border-slate-900 backdrop-blur-sm md:w-auto md:py-5">
@@ -37,7 +37,7 @@
             <td data-label="Přezdívka" class="rounded-l-md">{{ entry.user.nickname }}</td>
             <td data-label="Discord ID">
             {% if entry.user.discord %}
-            <img class="w-8 h-8 rounded-[50%] inline md:mr-4" src={{ url_for('UserContent.get_avatar', uid=(entry.user.discord or 0), s='thumb') }}>
+            <img class="w-8 h-8 rounded-[50%] inline md:mr-4" src={{ url_for('ContentController.get_avatar', uid=(entry.user.discord or 0), s='thumb') }}>
             {{ entry.user.display_name or entry.user.discord }}
             {% endif %}</td>
             <td data-label="Počet překladů">{{ entry.translation_count }}</td>
@@ -50,7 +50,7 @@
     </table>
     <div id="page-selector" class="flex flex-row items-center mx-auto border rounded-md w-min bg-white/5 backdrop-blur-sm border-slate-900">
         {% for p in range((user_count / 15)|round(0, 'ceil')|int) %}
-        <a class="px-2 py-2 transition-all rounded-md hover:bg-white/30" href="{{url_for('index', sort=sort, p=p)}}">{{p+1}}</a>
+        <a class="px-2 py-2 transition-all rounded-md hover:bg-white/30" href="{{url_for('LeaderboardController.index', sort=sort, p=p)}}">{{p+1}}</a>
         {% endfor %}
     </div>
 </div>

@@ -189,3 +189,7 @@ archive
 
 # Keys
 data/crypto
+
+# Temporary
+**/sqldiff.exe
+diff*.sql
