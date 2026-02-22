@@ -1,10 +1,11 @@
 from http import HTTPStatus
-from logging import critical, warning, error, info
+from logging import critical, warning, error, info, debug
 from flask import Blueprint, redirect, url_for, current_app, request, render_template, send_from_directory, flash, abort
 from flask_login import login_required, current_user
 from db import Backup
 from datetime import datetime
 import os
+import py7zr 
 
 from connectors.wikidotsite import snapshot_all
 from connectors.portainer import PortainerError
@@ -126,3 +127,25 @@ def make_all_snapshots():
     snapshot_all()
     flash("Snímky vytvořeny")
     return redirect(request.referrer or url_for('LeaderboardController.index'))
+
+@DebugToolsController.route("/debug/extract_snapshots")
+def extract_snapshots():
+    last_backup = Backup.select().order_by(Backup.date.desc()).first()
+    backup_filename = str(last_backup.sha1) + '.7z'
+    backup_path = os.path.join(current_app.config['BACKUP']['BACKUP_ARCHIVE_PATH'], backup_filename)
+    snapshot_path = os.path.join(os.getcwd(), 'temp')
+    if not os.path.exists(backup_path):
+        flash("Chyba integrity (poslední záloha neexistuje v archivu)")
+        return redirect(request.referrer or url_for("DebugToolsController.debug_index"))
+    archive = py7zr.SevenZipFile(backup_path, mode='r')
+    info(f"Extracting snapshots from latest backup archive ({backup_filename})")
+    try:
+        with archive:
+            archive.extract(path=snapshot_path, recursive=True, targets=['snapshots'])
+    except Exception as e:
+        flash(f"Chyba při extrakci ({str(e)})")
+        error(f"Extraction failed ({str(e)})")
+    else:
+        flash(f"Soubory extrahovány do {snapshot_path}")
+        info(f"Files extracted succesfully")
+    return redirect(request.referrer or url_for("DebugToolsController.debug_index"))    
