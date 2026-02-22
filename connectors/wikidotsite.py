@@ -98,7 +98,11 @@ def snapshot_all():
             info(f"Skipping {name}, invalid URL")
             continue
         
-        source_wiki_name = wiki_map[target_wiki_name]
+        try:
+            source_wiki_name = wiki_map[target_wiki_name]
+        except KeyError as e:
+            info(f"Skipping {name}, unknown wiki \"{target_wiki_name}\"")
+            continue
 
         # We check if we haven't already backed this one up
         if path.isfile(path.join(getcwd(), 'temp', 'snapshots', source_wiki_name, get_site_slug(link)+'-0.txt')): 
