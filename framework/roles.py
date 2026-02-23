@@ -63,6 +63,15 @@ def get_all_badges(stats: Frontpage, classes: str = "", override_classes: bool =
         combined_html = role_badge(0)
     return combined_html
 
+def has_badge(stats: Frontpage, role_type: RoleType) -> bool:
+    points_compared = 0
+    match role_type:
+        case RoleType.TRANSLATOR: points_compared = stats.points
+        case RoleType.WRITER: points_compared = stats.original_count
+        case _: return False
+    if points_compared >= role_cache[role_type]['min_points']: return True
+    return False
+
 # Caching to not use unnecessary I/O
 @lru_cache(maxsize=4096)
 def role_badge(points: int, type: RoleType = RoleType.TRANSLATOR, classes: str = "", override_classes: bool = False) -> str:
