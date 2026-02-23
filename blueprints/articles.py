@@ -9,20 +9,25 @@ from flask_login import current_user, login_required
 
 # Internal
 from forms import NewArticleForm, EditArticleForm, AssignCorrectionForm
-from framework.roles import get_role
+from framework.roles import get_role, RoleType
 from extensions import rss, webhook
 from db import User, Article
 
 ArticleController = Blueprint('ArticleController', __name__)
 
-def check_role_and_notify(uid, point_amount):
+def check_role_and_notify(uid: int, point_amount: float, original: bool):
     promoted_user = User.get_or_none(User.id == uid)
     if not promoted_user:
         error(f"How the fuck does this even happen? (Sending promote notify for a nonexistent user {uid})")
         return
-    current_points = promoted_user.stats.first().points
-    current_role = get_role(current_points)
-    next_role = get_role(current_points + point_amount)
+    if not original:
+        current_points = promoted_user.stats.first().points
+        current_role = get_role(current_points, RoleType.TRANSLATOR)
+        next_role = get_role(current_points + point_amount, RoleType.TRANSLATOR)
+    else:
+        current_count = promoted_user.stats.first().original_count
+        current_role = get_role(current_count, RoleType.WRITER)
+        next_role = get_role(current_count+1, RoleType.WRITER)
     if current_role != next_role:
         if promoted_user.discord:
             webhook.send_text(f'Uživatel {promoted_user.nickname} (<@{promoted_user.discord}>) dosáhl hranice pro roli {next_role["name"]}!')
@@ -60,8 +65,8 @@ def add_article(uid):
         flash(f'Překlad již existuje! (od uživatele {Article.get(Article.name == title).author.nickname})')
         return redirect(url_for('ArticleController.add_article', uid=uid))
     
-    if current_app.config['WEBHOOK_ENABLE'] and not is_original:
-        check_role_and_notify(uid, form.words.data / 1000 + form.bonus.data)
+    if current_app.config['WEBHOOK_ENABLE']:
+        check_role_and_notify(uid, form.words.data / 1000 + form.bonus.data, is_original)
 
     article = Article()
     article.name = title
