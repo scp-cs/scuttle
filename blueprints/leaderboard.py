@@ -12,7 +12,7 @@ LeaderboardController = Blueprint('LeaderboardController', __name__)
 def index():
     sort = request.args.get('sort', type=str, default='points')
     page = request.args.get('p', type=int, default=0)
-    role_type = request.args.get('type', type=str, default='translator')
+    role_type = request.args.get('r_type', type=str, default='translator')
     user_count = User.select().count()
     last_update = db.last_update().strftime("%Y-%m-%d %H:%M:%S")
     data = db.get_frontpage(sort, page)

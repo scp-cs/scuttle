@@ -82,11 +82,10 @@ def has_badge(stats: Frontpage, role_type: RoleType) -> bool:
     return False
 
 # Caching to not use unnecessary I/O
-#@lru_cache(maxsize=4096)
-def role_badge(points: float, role_type: RoleType, classes: str = "", override_classes: bool = False) -> str:
+@lru_cache(maxsize=4096)
+def role_badge(points: float, role_type: RoleType = RoleType.TRANSLATOR, classes: str = "", override_classes: bool = False) -> str:
     # if override_classes is true, the class list of the badge is replaced by the classes paramerer
     # if false, the contents of the classes parameter are appended to the end of the class list
-    info(role_type)
     role = get_role(points, role_type)
     return render_template_file(os.path.join(MODULE_DIR, 'templates', 'role_badge.j2'),\
                                 name=role['name'],\
