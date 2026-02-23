@@ -75,6 +75,8 @@ def test_portainer_login():
 @DebugToolsController.route('/debug/backup/kill_container')
 @login_required
 def kill_wikicomma_container():
+    if not portainer.is_authenticated():
+        portainer.login()
     try:
         portainer.kill_container()
         flash("Kontejner ukončen (SIGKILL)")
@@ -85,6 +87,8 @@ def kill_wikicomma_container():
 @DebugToolsController.route('/debug/backup/start_container')
 @login_required
 def start_wikicomma_container():
+    if not portainer.is_authenticated():
+        portainer.login()
     try:
         portainer.start_container()
         flash("Kontejner spuštěn")
