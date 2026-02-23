@@ -1,22 +1,23 @@
 {% extends "base.j2" %}
 
 {% block content %}
-<div class="flex flex-col items-center justify-center w-auto md:p-2">
-    <div>
-        <div class="inline-flex flex-col items-center w-full px-10 py-5 mb-8 border rounded-md shadow-2xl backdrop-blur-sm bg-white/5 border-slate-900 md:mt-4 md:w-auto md:flex-row">
+<div class="flex flex-col items-center justify-center w-auto h-full md:p-2">
+    <div class="">
+        <div class="inline-flex flex-col items-center w-full px-10 py-5 border rounded-md shadow-2xl backdrop-blur-sm bg-white/5 border-slate-900 md:mt-4 md:w-auto md:flex-row">
         <h2 class="text-lg font-bold md:mr-6">Řadit:</h2>
-        <a href="{{url_for('index', sort='az')}}" class="sorter-button">A-Z</a>
-        <a href="{{url_for('index', sort='count')}}" class="sorter-button">Počet článků</a>
-        <a href="{{url_for('index', sort='points')}}" class="sorter-button">Počet bodů</a>
-        <a href="{{url_for('index', sort='corrections')}}" class="sorter-button">Počet korekcí</a>
+          <a href="{{url_for('index', sort='az')}}" class="sorter-button">A-Z</a>
+          <a href="{{url_for('index', sort='count')}}" class="sorter-button">Počet článků</a>
+          <a href="{{url_for('index', sort='points')}}" class="sorter-button">Počet bodů</a>
+          <a href="{{url_for('index', sort='corrections')}}" class="sorter-button">Počet korekcí</a>
         </div>
         
-        <div class="inline-block w-full px-4 mb-6 ml-3 text-center text-black border rounded-md shadow-2xl bg-white/5 border-slate-900 backdrop-blur-sm md:w-auto md:py-5">
+        
+        <div class="inline-block w-full px-4 ml-3 text-center text-black border rounded-md shadow-2xl bg-white/5 border-slate-900 backdrop-blur-sm md:w-auto md:py-5">
             <i class="mr-4 text-xl text-white bi bi-search"></i>
             <input type="text" id="search-field" class="p-2 text-white rounded-md shadow-inner outline-none bg-white/20">
         </div>
     </div>
-    <div class="italic opacity-40">Aktualizováno {{lastupdate}}</div>
+    
     <table class="w-full my-2 px-2 transition-all shadow-2xl bg-white/5 backdrop-blur-sm rounded-md md:border-separate md:table-auto md:py-5 md:w-auto md:min-w-[60%] border-spacing-auto border-spacing-y-0 border-slate-900 border ">
     <thead>
         <tr class="border-b-2 border-black">
@@ -43,7 +44,7 @@
             <td data-label="Počet překladů">{{ entry.translation_count }}</td>
             <td data-label="Počet korekcí">{{ entry.correction_count }}</td>
             <td data-label="Počet bodů">{{ "%.1f" % entry.points }}</td>
-            <td data-label="Role" class="rounded-r-md pr-3">{{role_badge(entry.points, RoleType.TRANSLATOR, classes='float-left px-2')}} {{role_badge(entry.original_count, RoleType.WRITER, classes='float-right px-4')}}</td>
+            <td data-label="Role" class="rounded-r-md pr-3">{{get_all_badges(entry, classes='inline-block px-4')}}</td>
         </tr>
         {% endfor %}
     </tbody>
