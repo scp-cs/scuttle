@@ -1,1 +1,2 @@
+REM This file builds the CSS for the embed badge to be shown on external websites, not the role badge shown in SCUTTLE
 npx tailwindcss -c ./tailwind_badge_config.js -i ../static/css/src/badge.css -o ../static/css/badge.css --watch --minify

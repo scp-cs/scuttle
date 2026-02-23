@@ -15,7 +15,7 @@ from crypto import pw_hash
 from connectors.discord import DiscordClient
 from connectors.rss import RSSUpdateType
 from framework.menu import navigation_menu
-from framework.roles import role_badge
+from framework.roles import role_badge, get_all_badges, RoleType, role_type_to_points, has_badge
 from utils import ensure_config, config_has_key
 from tasks import discord_tasks, backup_task
 from db import User
@@ -185,6 +185,18 @@ def register_blueprints(app: Flask) -> None:
     app.register_blueprint(AutobackupController)
     app.register_blueprint(EmbedController)
 
+def register_template_globals(app: Flask) -> None:
+    # Add useful template globals
+    app.add_template_global(current_user, 'current_user')
+    app.add_template_global(RSSUpdateType)
+    app.add_template_global(RoleType)
+    app.add_template_global(navigation_menu)
+    app.add_template_global(role_badge)
+    app.add_template_global(has_badge)
+    app.add_template_global(get_all_badges)
+    app.add_template_global(role_type_to_points)
+    app.add_template_global(APP_VERSION, 'APP_VERSION')
+
 # TODO: App factory??
 if __name__ == '__main__':
     init_logger()
@@ -203,19 +215,10 @@ if __name__ == '__main__':
     create_directories(app)
 
     # Store all the singleton classes in config to access them from blueprints
-    # TODO: There has to be a better way to do this
-    app.config['scheduler'] = sched
-    app.config['oauth'] = oauth
-    app.config['rss'] = rss
+    # TODO: do something abt this
     app.config['webhook'] = webhook
 
-    # Add useful template globals
-    app.add_template_global(current_user, 'current_user')
-    app.add_template_global(RSSUpdateType)
-    app.add_template_global(navigation_menu)
-    app.add_template_global(role_badge)
-    app.add_template_global(APP_VERSION, 'APP_VERSION')
-
+    register_template_globals(app)
     register_blueprints(app)
 
     # Initialize the database
