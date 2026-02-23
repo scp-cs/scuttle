@@ -173,9 +173,6 @@ if __name__ == '__main__':
     makedirs('./data', exist_ok=True)
 
     # Store all the singleton classes in config to access them from blueprints
-    app.config['scheduler'] = sched
-    app.config['oauth'] = oauth
-    app.config['rss'] = rss
     app.config['webhook'] = webhook
 
     # Add useful template globals
