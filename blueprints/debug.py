@@ -1,47 +1,50 @@
 from http import HTTPStatus
-from logging import critical, warning, error, info
+from logging import critical, warning, error, info, debug
 from flask import Blueprint, redirect, url_for, current_app, request, render_template, send_from_directory, flash, abort
 from flask_login import login_required, current_user
 from db import Backup
 from datetime import datetime
 import os
+import py7zr 
 
-from extensions import sched, webhook
+from connectors.wikidotsite import snapshot_all
+from connectors.portainer import PortainerError
+from extensions import sched, webhook, portainer
 
-DebugTools = Blueprint('DebugTools', __name__)
+DebugToolsController = Blueprint('DebugToolsController', __name__)
 
-@DebugTools.before_request
+@DebugToolsController.before_request
 def log_debug_access():
     if not current_app.config['DEBUG'] and not current_user.is_anonymous:
         warning(f'Debug endpoint {request.full_path} accessed by {current_user.nickname} (ID: {current_user.get_id()})')
 
-@DebugTools.route('/debug/nickupdate')
+@DebugToolsController.route('/debug/nickupdate')
 @login_required
 def nickupdate():
     sched.run_job('Fetch nicknames')
     flash("Aktualizace spuštěna na pozadí!")
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('LeaderboardController.index'))
 
-@DebugTools.route('/debug/avupdate')
+@DebugToolsController.route('/debug/avupdate')
 @login_required
 def avdownload():
     sched.run_job('Download avatars')
     flash("Aktualizace spuštěna na pozadí!")
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('LeaderboardController.index'))
 
-@DebugTools.route('/debug/rssupdate')
+@DebugToolsController.route('/debug/rssupdate')
 @login_required
 def updaterss():
     sched.run_job('Fetch RSS updates')
     flash("Aktualizace spuštěna na pozadí!")
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('LeaderboardController.index'))
 
-@DebugTools.route('/debug')
+@DebugToolsController.route('/debug')
 @login_required
 def debug_index():
     return render_template('debug/tools.j2')
 
-@DebugTools.route('/debug/test_webhook')
+@DebugToolsController.route('/debug/test_webhook')
 @login_required
 def webhook_testing():
     try:
@@ -50,41 +53,103 @@ def webhook_testing():
     except Exception as e:
         flash("Testovací webhook se nepodařilo odeslat (zkontrolujte logy)")
         error(f"Sending test webhook failed with error ({str(e)})")
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('LeaderboardController.index'))
     
-@DebugTools.route('/debug/db/export')
+@DebugToolsController.route('/debug/db/export')
 @login_required
 def export_database():
     download_name=datetime.strftime(datetime.now(), 'scp_%d_%m_%Y.db')
     flash("Databáze exportována!")
     return send_from_directory(os.path.join(os.getcwd(), 'data'), 'scp.db', as_attachment=True, download_name=download_name)
 
-@DebugTools.route('/debug/raise_error')
+@DebugToolsController.route('/debug/backup/test_portainer')
+@login_required
+def test_portainer_login():
+    try:
+        portainer.login()
+        flash("Přihlášení úspěšné!")
+    except PortainerError as e:
+        flash(f"Přihlášení neúspěšné! ({str(e)})")
+    return redirect(request.referrer or url_for("DebugToolsController.debug_index"))
+
+@DebugToolsController.route('/debug/backup/kill_container')
+@login_required
+def kill_wikicomma_container():
+    if not portainer.is_authenticated():
+        portainer.login()
+    try:
+        portainer.kill_container()
+        flash("Kontejner ukončen (SIGKILL)")
+    except PortainerError as e:
+        flash(f"Kontejner se nepodařilo ukončit! ({str(e)})")
+    return redirect(request.referrer or url_for("DebugToolsController.debug_index"))
+
+@DebugToolsController.route('/debug/backup/start_container')
+@login_required
+def start_wikicomma_container():
+    if not portainer.is_authenticated():
+        portainer.login()
+    try:
+        portainer.start_container()
+        flash("Kontejner spuštěn")
+    except PortainerError as e:
+        flash(f"Kontejner se nepodařilo spustit! ({str(e)})")
+    return redirect(request.referrer or url_for("DebugToolsController.debug_index"))
+
+@DebugToolsController.route('/debug/raise_error')
 @login_required
 def raise_error():
     error("Error handling test")
     abort(HTTPStatus.INTERNAL_SERVER_ERROR)
 
-@DebugTools.route('/debug/raise_unhandled')
+@DebugToolsController.route('/debug/raise_unhandled')
 @login_required
 def raise_unhandled():
     info('Raising unhandled exception')
     raise RuntimeError("teehee :3")
 
-@DebugTools.route('/debug/export_pubkey')
+@DebugToolsController.route('/debug/export_pubkey')
 @login_required
 def export_pubkey():
     info(f"Public key exported by user {current_user.nickname}")
     return send_from_directory(os.path.join(os.getcwd(), 'data', 'crypto'), 'scuttle.pub.asc', as_attachment=True)
 
-@DebugTools.route('/debug/raise_critical')
+@DebugToolsController.route('/debug/raise_critical')
 @login_required
 def raise_critical_error():
     critical("Critical error handling test")
     abort(HTTPStatus.INTERNAL_SERVER_ERROR)
 
-@DebugTools.route('/debug/backup/forceend')
+@DebugToolsController.route('/debug/backup/forceend')
 def force_end_backup():
     Backup.update(is_finished=True).execute()
     flash("Záloha ukončena")
-    return redirect(request.referrer or url_for('index'))
+    return redirect(request.referrer or url_for('LeaderboardController.index'))
+
+@DebugToolsController.route('/debug/backup/snapshot_all')
+def make_all_snapshots():
+    snapshot_all()
+    flash("Snímky vytvořeny")
+    return redirect(request.referrer or url_for('LeaderboardController.index'))
+
+@DebugToolsController.route("/debug/extract_snapshots")
+def extract_snapshots():
+    last_backup = Backup.select().order_by(Backup.date.desc()).first()
+    backup_filename = str(last_backup.sha1) + '.7z'
+    backup_path = os.path.join(current_app.config['BACKUP']['BACKUP_ARCHIVE_PATH'], backup_filename)
+    snapshot_path = os.path.join(os.getcwd(), 'temp')
+    if not os.path.exists(backup_path):
+        flash("Chyba integrity (poslední záloha neexistuje v archivu)")
+        return redirect(request.referrer or url_for("DebugToolsController.debug_index"))
+    archive = py7zr.SevenZipFile(backup_path, mode='r')
+    info(f"Extracting snapshots from latest backup archive ({backup_filename})")
+    try:
+        with archive:
+            archive.extract(path=snapshot_path, recursive=True, targets=['snapshots'])
+    except Exception as e:
+        flash(f"Chyba při extrakci ({str(e)})")
+        error(f"Extraction failed ({str(e)})")
+    else:
+        flash(f"Soubory extrahovány do {snapshot_path}")
+        info(f"Files extracted succesfully")
+    return redirect(request.referrer or url_for("DebugToolsController.debug_index"))    

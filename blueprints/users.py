@@ -48,7 +48,7 @@ def add_user():
     else:
         info(f"User account created for {form.nickname.data} with ID {user.get_id()} by {current_user.nickname} (ID: {current_user.get_id()})")
     
-    return redirect(url_for('UserAuth.temp_pw') if form.can_login.data else url_for('UserController.user', uid=user.get_id()))
+    return redirect(url_for('AuthController.temp_pw') if form.can_login.data else url_for('UserController.user', uid=user.get_id()))
 
 @UserController.route('/user/<int:uid>/edit', methods=["GET", "POST"])
 @login_required
@@ -92,7 +92,7 @@ def delete_user(uid: int):
     info(f"User {name} deleted by {current_user.nickname} (ID: {current_user.get_id()})")
     flash(f'Uživatel {name} smazán')
     
-    return redirect(url_for('index'))
+    return redirect(url_for('LeaderboardController.index'))
 
 @UserController.route('/user/<int:uid>/admin/grant')
 @login_required
@@ -119,7 +119,7 @@ def grant_admin_perms(uid: int):
     flash(f'Uživatel {user.nickname} je nyní administrátor')
     webhook.send_text(f"Uživateli {user.nickname} byla udělena administrátorská práva")
     
-    return redirect(url_for('UserAuth.temp_pw'))
+    return redirect(url_for('AuthController.temp_pw'))
 
 @UserController.route('/user/<int:uid>/admin/revoke')
 @login_required

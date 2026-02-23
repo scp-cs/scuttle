@@ -32,8 +32,15 @@ class PortainerConnector():
     }
     ```
     """
-    __initialized = False
 
+    def requires_init(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            if not getattr(self, '_initialized', False):
+                raise PortainerError("Not Initialized")
+            return func(self, *args, **kwargs)
+        return wrapper
+    
     def requires_auth(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
@@ -41,7 +48,7 @@ class PortainerConnector():
                 raise PortainerError('No Portainer URL')
             if not hasattr(self, '_jwt'):
                 raise PortainerError(f"Not logged in")
-            return func(self, *args, **kwargs)
+            return PortainerConnector.requires_init(func(self, *args, **kwargs))
         return wrapper
 
     def init_app(self, app: Flask):
@@ -79,7 +86,7 @@ class PortainerConnector():
         self.__password = config['PASSWORD']
         self.__env_id = config['ENV_ID']
         self.__container_name = config['CONTAINER_NAME']
-        self.__initialized = True
+        self._initialized = True
 
         debug('PortainerConnector init complete')
 
@@ -90,8 +97,15 @@ class PortainerConnector():
         """
         Returns true if all necessary config values are present and loaded
         """
-        return self.__initialized
+        return self._initialized
 
+    def is_authenticated(self) -> bool:
+        """
+        Returns true if a saved bearer token is present
+        """
+        return hasattr(self, '_jwt')
+
+    @requires_init
     def login(self, user: str = None, password: str = None):
         """
         Logs in to portainer and saves the access token. If no credentials are specified, those loaded from config are used.
@@ -121,7 +135,6 @@ class PortainerConnector():
                 error(f'Weird status code from portainer ({login_response.status_code} - {HTTPStatus(login_response.status_code).name})')
                 raise PortainerError(f'Weird status code from portainer ({login_response.status_code} - {HTTPStatus(login_response.status_code).name})')
 
-    @requires_auth
     def __find_container(self) -> str:
         filters = urllib.parse.quote(f'{{"name": ["{self.__container_name}"]}}')
         query_url = self.url+f'/endpoints/{self.__env_id}/docker/containers/json?all=true&filters={filters}'
@@ -137,7 +150,6 @@ class PortainerConnector():
 
         return json[0]['Id']
 
-    @requires_auth
     def __container_action(self, action: str):
         container_id = self.__find_container()
         query_url = self.url+f'/endpoints/{self.__env_id}/docker/containers/{container_id}/{action}'
@@ -149,15 +161,15 @@ class PortainerConnector():
         Starts the container. Does nothing if container is already running.
         """
 
-        response = self.__container_action('start')
-        match response.status_code:
+        rsp = self.__container_action('start')
+        match rsp.status_code:
             case HTTPStatus.NO_CONTENT: # Portainer at it with the silly status codes again 
                 info("Container successfully started")
             case HTTPStatus.NOT_MODIFIED: # Okay I guess this one makes sense
                 warning("Container is already running")
             case HTTPStatus.INTERNAL_SERVER_ERROR:
                 error("Couldn't start container")
-                raise PortainerError("Couldn't start container, server error")
+                raise PortainerError(f"Couldn't start container, server error {rsp.text}")
 
     @requires_auth
     def stop_container(self):

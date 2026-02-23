@@ -3,7 +3,7 @@
 </head>
 
 <div class="relative flex flex-row items-center justify-start h-24 rounded-lg">
-    <img class="block h-full bg-black border border-white border-solid rounded-l-lg" src="{{ url_for('UserContent.get_avatar', uid=(user.discord or 0), s='full')}}">
+    <img class="block h-full bg-black border border-white border-solid rounded-l-lg" src="{{ url_for('ContentController.get_avatar', uid=(user.discord or 0), s='full')}}">
     <div class="flex flex-col flex-1 h-full pl-4 text-white bg-black rounded-r-lg">
         <h1 class="m-0 mt-1 text-xl font-bold text-white">{{user.wikidot}}</h1>
         <p class="m-0 text-sm"><b>{{stats.original_count}}</b> Článků</p>

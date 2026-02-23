@@ -15,6 +15,7 @@ from connectors.wikicomma import Status, Message, MessageType, ErrorKind, genera
 from db import WikiCommaConfig, Wiki, Backup, User
 from crypto import sign_file, get_fingerprint
 from framework.api.schemas.backup_schema import status_message_schema, backup_config_schema
+import utils
 
 # External
 import urllib.parse
@@ -53,23 +54,38 @@ def setup_backup_route(setup_state):
 def finish_backup():
     if Backup.get_or_none(Backup.is_finished == False) is None:
         # Don't think that this can actually happen but it's better to handle it regardless
-        warning("No backups to finish!")
+        error("No backups to finish!")
         # If it does happen then I messed up somehow
         # TODO: Remove this at some point
         webhook.send_text("Unexpected state encountered while finishing backup (definitely a bug), please review application logs")
         return
+
+    snapshot_count = 0
 
     info(f"Saving backup")
     archive_path = os.path.join(current_app.config['BACKUP']['BACKUP_ARCHIVE_PATH'], "current.7z")
     try:
         with py7zr.SevenZipFile(archive_path, 'w') as archive:
             archive.writeall(current_app.config['BACKUP']['BACKUP_COMMON_PATH'], 'backup')
+            # Add all snapshots to the backup
+            snapshot_path = os.path.join(os.getcwd(), 'temp', 'snapshots')
+            if utils.config_has_key(current_app.config, "BACKUP.save_snapshots", True) and os.path.isdir(snapshot_path):
+                archive.writeall(snapshot_path, 'snapshots')
+                snapshot_count = utils.count_files_rec(snapshot_path)
+        # Hash the archive with SHA-1 and save that for later
         with open(archive_path, 'rb') as archive:
             hash = hashlib.sha1(archive.read()).hexdigest()
     except Exception as e:
         error("Couldn't compress backup (check config paths)")
         error(str(e))
+        # Let the admin know that something went wrong
+        webhook.send_text("```Záloha selhala (nepodařilo se vytvořit archiv)```")
+        statuses.clear()
+        # The backup will stil be marked as "in-progress" here, the status has to be cleared on the devtools page
+        return
     else:
+        # Don't know what the purpose of the else block is here but scared to change it
+        # Give the archive a unique name and mark the backup as finished
         archive = os.path.join(current_app.config['BACKUP']['BACKUP_ARCHIVE_PATH'], f'{hash}.7z')
         info(f"Archive hash is: {hash}")
         os.rename(archive_path, archive)
@@ -81,22 +97,34 @@ def finish_backup():
         error('Signing backup failed')
         signed = False
     else:
-        # Ugly
         with open(archive+'.asc', 'w') as sig_file:
             sig_file.write(str(signature))
 
+    # Build a report that will be sent to Discord through the webhook
     backup_done_message = f"```Záloha dokončena v {datetime.now().strftime('%H:%M:%S %d-%m-%y')}:\n\n"
+
+    # Add an article count and error count for each wiki
     for wiki in statuses.values():
         status = wiki.status
         backup_done_message += f"{status.wiki_tag}\nZálohováno {status.finished_articles} z {status.total_articles} článků\n"
         backup_done_message += f"Zaznamenáno {status.total_errors} chyb\n\n"
+
+    # Add the current snapshot count
+    if utils.config_has_key(current_app.config, "BACKUP.save_snapshots", True):
+        backup_done_message += f"Uloženo {snapshot_count} snímků původních stránek\n\n"
+
+    # Add the signing key fingerprint
     if not signed:
         backup_done_message += "Zálohu se nepodařilo podepsat!\n"
     else:
-        readable_key = ' '.join(textwrap.wrap(str(get_fingerprint()), 4))
-        backup_done_message += f"Soubor je podepsán pomocí klíče s otiskem {readable_key}, před obnovením zkontrolujte signaturu!\n\n"
+        readable_fp = ' '.join(textwrap.wrap(str(get_fingerprint()), 4))
+        backup_done_message += f"Soubor je podepsán pomocí klíče s otiskem {readable_fp}, před obnovením zkontrolujte signaturu!\n\n"
+
+    # Add the archive hash
     backup_done_message += f"Kontrolní součet archivu je {hash}\n\n"
     backup_done_message += "Administrace Záznamů a Informační Bezpečnosti vám přeje hezký den!```" # Be polite :3
+
+    # Send it
     webhook.send_text(backup_done_message)
     statuses.clear()
     Backup.update(is_finished=True).where(Backup.is_finished == False).execute()
@@ -150,6 +178,8 @@ def backup_download_sig(backup_id: int):
     return send_file(signature_path, as_attachment=True, download_name=download_name)
 
 # TODO: This doesn't require auth for now as logging wikicomma in would be a pain in the ass
+# Theoretical worst case: someone could force trigger the post-backup process while Wikicomma is still running
+# This would mess up the app state but the files themselves would be intact
 @AutobackupController.route('/backup/status', methods=["GET", "POST"])
 def backup_status():
     if request.method == "GET":
