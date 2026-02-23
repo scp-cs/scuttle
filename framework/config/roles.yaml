@@ -43,20 +43,20 @@ writer:
     - writer1:
       name: "Spisovatel I"
       point_limit: 1
-      badge_css: "bg-gradient-to-r from-yellow-100 to-red-400"
+      badge_css: "bg-[conic-gradient(at_left,_var(--tw-gradient-stops))] from-rose-800 via-zinc-700 to-violet-700"
     - writer2:
       name: "Spisovatel II"
       point_limit: 3
-      badge_css: "bg-gradient-to-r from-orange-600 to-emerald-400"
+      badge_css: "bg-gradient-to-b from-cyan-400  to-sky-600"
     - writer3:
       name: "Spisovatel III"
       point_limit: 10
-      badge_css: "bg-gradient-to-r from-amber-500 to-pink-500"
+      badge_css: "bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-neutral-100 via-emerald-500 to-cyan-950"
     - writer4:
       name: "Spisovatel IV"
       point_limit: 25
-      badge_css: "bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500"
+      badge_css: "bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] from-amber-400 via-red-500 to-stone-700"
     - writer5:
       name: "Spisovatel V"
       point_limit: 40
-      badge_css: "bg-gradient-to-r from-gray-700 via-gray-900 to-black"
+      badge_css: "bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-stone-950 via-fuchsia-500 to-neutral-950"

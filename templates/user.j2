@@ -22,8 +22,8 @@
             <p class="my-1 text-xl"><b>Discord:</b> {{user.display_name}} ({{ user.discord }})</p>
             <div class="flex flex-row items-center justify-start gap-3">
             <p class="inline my-1 text-xl"><b>Počet bodů:</b> {{stats.points|round(2)}}</p>
-            {% if stats.points > 5 %}
-            {{role_badge(stats.points, classes="bg-opacity-70 text-sm font-italic py-1 px-3 inline w-auto rounded-full shadow-lg", override_classes=True)}}
+            {% if has_badge(stats, RoleType.TRANSLATOR) or has_badge(stats, RoleType.WRITER) %}
+            {{get_all_badges(stats, classes="bg-opacity-70 text-sm font-italic py-1 px-3 inline w-auto rounded-full shadow-lg", override_classes=True)}}
             {% endif %}
             </div>
             <p class="mt-1 text-xl"><b>Celkem překladů:</b> {{stats.translation_count}}</p>

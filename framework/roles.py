@@ -73,6 +73,8 @@ def get_all_badges(stats: Frontpage, classes: str = "", override_classes: bool =
     return combined_html
 
 def has_badge(stats: Frontpage, role_type: RoleType) -> bool:
+    if role_cache is None:
+        load_role_file()
     points_compared = 0
     match role_type:
         case RoleType.TRANSLATOR: points_compared = stats.points
