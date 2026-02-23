@@ -15,5 +15,5 @@ def index():
     role_type = request.args.get('r_type', type=str, default='translator')
     user_count = User.select().count()
     last_update = db.last_update().strftime("%Y-%m-%d %H:%M:%S")
-    data = db.get_frontpage(sort, page)
+    data = db.get_frontpage(sort, page, role_type)
     return render_template('users.j2', users=data, lastupdate=last_update, user_count=user_count, sort=sort, r_type=role_type)

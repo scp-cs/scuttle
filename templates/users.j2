@@ -28,9 +28,9 @@
         <tr class="border-b-2 border-black">
             <th>Nickname</th>
             <th>Discord</th>
-            <th>Překlady</th>
+            {% if r_type == 'writer' %} <th>Články</th> {% else %}  <th>Překlady</th> {% endif %}
             <th>Korekce</th>
-            <th>Celkem bodů</th>
+            {% if r_type != 'writer'%} <th>Celkem bodů</th> {% endif %}
             <th>Aktuální role</th>
             {% if current_user.is_authenticated %}
             <th></th>
@@ -46,10 +46,14 @@
             <img class="w-8 h-8 rounded-[50%] inline md:mr-4" src={{ url_for('ContentController.get_avatar', uid=(entry.user.discord or 0), s='thumb') }}>
             {{ entry.user.display_name or entry.user.discord }}
             {% endif %}</td>
-            <td data-label="Počet překladů">{{ entry.translation_count }}</td>
+            {% if r_type == 'writer' %} 
+              <td data-label="Napsané články">{{ entry.original_count }}</td> 
+            {% else %}  
+              <td data-label="Počet překladů">{{ entry.translation_count }}</td> 
+            {% endif %}
             <td data-label="Počet korekcí">{{ entry.correction_count }}</td>
-            <td data-label="Počet bodů">{{ "%.1f" % entry.points }}</td>
-            <td data-label="Role" class="rounded-r-md pr-3">{{role_badge(role_type_to_points(r_type, entry), role_type=r_type, classes='px-4')}}</td>
+            {% if r_type != 'writer' %} <td data-label="Počet bodů">{{ "%.1f" % entry.points }}</td> {% endif %}
+            <td data-label="Role" class="rounded-r-md pr-3 w-fit">{{role_badge(role_type_to_points(r_type, entry), role_type=r_type, classes='px-4')}}</td>
         </tr>
         {% endfor %}
     </tbody>

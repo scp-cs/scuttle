@@ -228,19 +228,30 @@ models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, Wiki
 def last_update() -> datetime.datetime:
     return Article.select(fn.MAX(Article.added)).scalar() or datetime.datetime(year=1990, month=1, day=1)
 
-def get_frontpage(sort: str, page: int):
+def get_frontpage(sort: str, page: int, r_type: str):
     entries = Frontpage.select().join(User).limit(PAGE_ITEMS).offset(PAGE_ITEMS*page)
-    match sort:
-        case 'az':
-            result = entries.order_by(User.nickname.collate("NOCASE").asc()).prefetch(User)
-        case 'points':
-            result = entries.order_by(Frontpage.points.desc()).prefetch(User)
-        case 'count':
-            result = entries.order_by(Frontpage.translation_count.desc()).prefetch(User)
-        case 'corrections':
-            result = entries.order_by(Frontpage.correction_count.desc()).prefetch(User)
-        case 'originals':
-            result = entries.order_by(Frontpage.original_count.desc()).prefetch(User)
-        case _:
-            result = entries.order_by(Frontpage.points.desc()).prefetch(User)
+    if r_type == 'writer':
+        match sort:
+            case 'az':
+                result = entries.order_by(User.nickname.collate("NOCASE").asc()).prefetch(User)
+            case 'points' | 'count' | 'originals':
+                result = entries.order_by(Frontpage.original_count.desc()).prefetch(User)
+            case 'corrections':
+                result = entries.order_by(Frontpage.correction_count.desc()).prefetch(User)
+            case _:
+                result = entries.order_by(Frontpage.original_count.desc()).prefetch(User)
+    else:
+        match sort:
+            case 'az':
+                result = entries.order_by(User.nickname.collate("NOCASE").asc()).prefetch(User)
+            case 'points':
+                result = entries.order_by(Frontpage.points.desc()).prefetch(User)
+            case 'count':
+                result = entries.order_by(Frontpage.translation_count.desc()).prefetch(User)
+            case 'corrections':
+                result = entries.order_by(Frontpage.correction_count.desc()).prefetch(User)
+            case 'originals':
+                result = entries.order_by(Frontpage.original_count.desc()).prefetch(User)
+            case _:
+                result = entries.order_by(Frontpage.points.desc()).prefetch(User)
     return result

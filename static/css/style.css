@@ -1058,10 +1058,6 @@ video {
   margin-bottom: 1.5rem;
 }
 
-.mb-8{
-  margin-bottom: 2rem;
-}
-
 .ml-2{
   margin-left: 0.5rem;
 }
@@ -1170,22 +1166,17 @@ video {
   height: auto;
 }
 
+.h-fit{
+  height: -moz-fit-content;
+  height: fit-content;
+}
+
 .h-full{
   height: 100%;
 }
 
 .h-screen{
   height: 100vh;
-}
-
-.h-max{
-  height: -moz-max-content;
-  height: max-content;
-}
-
-.h-fit{
-  height: -moz-fit-content;
-  height: fit-content;
 }
 
 .max-h-48{
@@ -1257,6 +1248,14 @@ video {
 
 .min-w-\[40em\]{
   min-width: 40em;
+}
+
+.max-w-56{
+  max-width: 14rem;
+}
+
+.max-w-32{
+  max-width: 8rem;
 }
 
 .flex-1{
@@ -1720,10 +1719,6 @@ video {
   --tw-bg-opacity: 0.7;
 }
 
-.bg-opacity-80{
-  --tw-bg-opacity: 0.8;
-}
-
 .bg-\[url\(\'\.\.\/\.\.\/static\/catto\.png\'\)\]{
   background-image: url('../../static/catto.png');
 }
@@ -2185,14 +2180,14 @@ video {
   transition-duration: 150ms;
 }
 
-.transition-opacity{
-  transition-property: opacity;
+.transition-colors{
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
 
-.transition-colors{
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+.transition-opacity{
+  transition-property: opacity;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
 }
@@ -2422,19 +2417,14 @@ td::before{
     left: 1.25rem;
   }
 
-  .md\:my-2{
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .md\:mx-1{
-    margin-left: 0.25rem;
-    margin-right: 0.25rem;
-  }
-
   .md\:my-0{
     margin-top: 0px;
     margin-bottom: 0px;
+  }
+
+  .md\:my-2{
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
   }
 
   .md\:mb-0{
