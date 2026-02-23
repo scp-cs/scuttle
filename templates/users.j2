@@ -2,19 +2,24 @@
 
 {% block content %}
 <div class="flex flex-col items-center justify-center w-auto h-full md:p-2">
-    <div class="">
+    <div class="h-fit">
         <div class="inline-flex flex-col items-center w-full px-10 py-5 border rounded-md shadow-2xl backdrop-blur-sm bg-white/5 border-slate-900 md:mt-4 md:w-auto md:flex-row">
         <h2 class="text-lg font-bold md:mr-6">Řadit:</h2>
-        <a href="{{url_for('LeaderboardController.index', sort='az')}}" class="sorter-button">A-Z</a>
-        <a href="{{url_for('LeaderboardController.index', sort='count')}}" class="sorter-button">Počet článků</a>
-        <a href="{{url_for('LeaderboardController.index', sort='points')}}" class="sorter-button">Počet bodů</a>
-        <a href="{{url_for('LeaderboardController.index', sort='corrections')}}" class="sorter-button">Počet korekcí</a>
+        <a href="{{url_for('LeaderboardController.index', sort='az', r_type=r_type)}}" class="sorter-button">A-Z</a>
+        <a href="{{url_for('LeaderboardController.index', sort='count', r_type=r_type)}}" class="sorter-button">Počet článků</a>
+        <a href="{{url_for('LeaderboardController.index', sort='points', r_type=r_type)}}" class="sorter-button">Počet bodů</a>
+        <a href="{{url_for('LeaderboardController.index', sort='corrections', r_type=r_type)}}" class="sorter-button">Počet korekcí</a>
         </div>
         
         
         <div class="inline-block w-full px-4 ml-3 text-center text-black border rounded-md shadow-2xl bg-white/5 border-slate-900 backdrop-blur-sm md:w-auto md:py-5">
             <i class="mr-4 text-xl text-white bi bi-search"></i>
             <input type="text" id="search-field" class="p-2 text-white rounded-md shadow-inner outline-none bg-white/20">
+        </div>
+
+        <div class="inline-flex flex-col items-center w-full px-2 py-5 border rounded-md shadow-2xl backdrop-blur-sm bg-white/5 border-slate-900 md:mt-4 md:w-auto md:flex-row">
+          <a href="{{url_for('LeaderboardController.index', sort=sort, r_type='translator')}}" class="hover:bg-white/30 md:my-0 md:w-auto px-4 py-2 text-center text-white transition-colors rounded-l-lg select-none border border-slate-900 flex-grow my-2 inline bg-white/10 cursor-pointer">Překladatelé</a>
+          <a href="{{url_for('LeaderboardController.index', sort=sort, r_type='writer')}}" class="hover:bg-white/30 md:my-0 md:w-auto px-4 py-2 text-center text-white transition-colors rounded-r-lg select-none border-slate-900 flex-grow my-2 inline bg-white/10 cursor-pointer">Spisovatelé</a>
         </div>
     </div>
     
@@ -44,7 +49,7 @@
             <td data-label="Počet překladů">{{ entry.translation_count }}</td>
             <td data-label="Počet korekcí">{{ entry.correction_count }}</td>
             <td data-label="Počet bodů">{{ "%.1f" % entry.points }}</td>
-            <td data-label="Role" class="rounded-r-md pr-3">{{get_all_badges(entry, classes='inline-block px-4')}}</td>
+            <td data-label="Role" class="rounded-r-md pr-3">{{role_badge(role_type_to_points(r_type, entry), role_type=r_type, classes='px-4')}}</td>
         </tr>
         {% endfor %}
     </tbody>

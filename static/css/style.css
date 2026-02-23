@@ -1178,6 +1178,16 @@ video {
   height: 100vh;
 }
 
+.h-max{
+  height: -moz-max-content;
+  height: max-content;
+}
+
+.h-fit{
+  height: -moz-fit-content;
+  height: fit-content;
+}
+
 .max-h-48{
   max-height: 12rem;
 }
@@ -1710,6 +1720,10 @@ video {
   --tw-bg-opacity: 0.7;
 }
 
+.bg-opacity-80{
+  --tw-bg-opacity: 0.8;
+}
+
 .bg-\[url\(\'\.\.\/\.\.\/static\/catto\.png\'\)\]{
   background-image: url('../../static/catto.png');
 }
@@ -2177,6 +2191,12 @@ video {
   transition-duration: 150ms;
 }
 
+.transition-colors{
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
 .duration-500{
   transition-duration: 500ms;
 }
@@ -2405,6 +2425,16 @@ td::before{
   .md\:my-2{
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+  }
+
+  .md\:mx-1{
+    margin-left: 0.25rem;
+    margin-right: 0.25rem;
+  }
+
+  .md\:my-0{
+    margin-top: 0px;
+    margin-bottom: 0px;
   }
 
   .md\:mb-0{
