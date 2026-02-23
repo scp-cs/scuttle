@@ -96,6 +96,7 @@ def search_user():
             'displayname': u.user.display_name,
             'tr_count': u.translation_count,
             'cr_count': u.correction_count,
+            'orig_count': u.original_count,
             'tr_role_html': role_badge(u.points),
             'points': u.points} for u in user]
     return result_ok(results)
