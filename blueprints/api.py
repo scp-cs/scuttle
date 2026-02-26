@@ -164,7 +164,7 @@ def assign_correction(uid: int):
     article.corrected = datetime.now()
     article.corrector = corrector
     article.save()
-    info(f"Assigning correction of \"{article.name}\" ({article.id}) to {corrector.nickname} ({corrector.uid})")
+    info(f"Assigning correction of \"{article.name}\" ({article.id}) to {corrector.nickname} ({corrector.id})")
     flash('Korekce zapsána')
     return result_ok()
 
