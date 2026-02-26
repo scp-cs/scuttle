@@ -2,6 +2,7 @@ from http import HTTPStatus
 from flask import render_template, Blueprint, abort, request
 from enum import StrEnum
 from os import getcwd, path, listdir
+import werkzeug.utils
 import json
 
 from db import User, Article
@@ -40,10 +41,11 @@ def user_badge(uid: int):
     embed_type = request.args.get("type", type=str, default=EmbedType.TRANSLATOR)
     if embed_type not in list(EmbedType): abort(HTTPStatus.BAD_REQUEST) # Abort on invalid type
     embed_theme = request.args.get("theme", type=str, default="default")
+    safe_theme = werkzeug.utils.secure_filename(embed_theme)
     user = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
     stats = user.stats.first()
     last = user.articles.where(Article.is_original == (embed_type != EmbedType.TRANSLATOR)).order_by(Article.added.desc()).first()
-    return render_template(get_template(embed_type, embed_theme), user=user, stats=stats, last=last)
+    return render_template(get_template(embed_type, safe_theme), user=user, stats=stats, last=last)
 
 @EmbedController.route('/user/<int:uid>/preview_embed')
 def user_badge_preview(uid: int):
