@@ -24,7 +24,7 @@ def update_nicknames_task(override_users: Optional[List[User]] = None):
             user.save()
         time.sleep(0.2) # Wait a bit so the API doesn't 429
 
-def download_avatars_task(path: str | PathLike = './temp/avatar', override_users: Optional[List[User]] = None):
+def download_avatars_task(av_path: str | PathLike = './temp/avatar', override_users: Optional[List[User]] = None):
     users = override_users or list(User.select(User.discord, User.avatar_hash, User.nickname, User.id).where(User.discord.is_null(False)))
 
     for user in users:
@@ -45,9 +45,9 @@ def download_avatars_task(path: str | PathLike = './temp/avatar', override_users
                 warning(f"Skipping avatar download for {user.discord} (API request failed)")
                 continue
             if avatar is not None:
-                with open(join(path,f'{user}.png'), 'wb') as file:
+                with open(join(av_path,f'{user.discord}.png'), 'wb') as file:
                     file.write(avatar)
-                    Image.open(BytesIO(avatar)).resize((64, 64), Image.Resampling.NEAREST).save(join(path,f'{user}_thumb.png')) # Create a 64x64 thumnail and save it as [ID]_thumb.png
+                    Image.open(BytesIO(avatar)).resize((64, 64), Image.Resampling.NEAREST).save(join(av_path,f'{user.discord}_thumb.png')) # Create a 64x64 thumnail and save it as [ID]_thumb.png
 
                 time.sleep(0.5) # Wait for a bit so we don't hit the rate limit
             else:
