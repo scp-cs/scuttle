@@ -28,14 +28,22 @@ def download_avatars_task(path: str | PathLike = './temp/avatar', override_users
     users = override_users or list(User.select(User.discord, User.avatar_hash, User.nickname, User.id).where(User.discord.is_null(False)))
 
     for user in users:
-        discord_data = DiscordClient.get_user(user.discord)
+        try:
+            discord_data = DiscordClient.get_user(user.discord)
+        except DiscordException:
+            warning(f"Skipping avatar download for {user.discord} (API request failed)")
+            continue
         if not discord_data:
             warning(f"Skipping avatar update for {user.nickname} ({user.discord}) (Couldn't fetch API data)")
             continue
         # Check that the avatar hashes are different before downloading the avatar
         if user.avatar_hash is None or user.avatar_hash != discord_data['avatar']:
             User.update(avatar_hash=discord_data['avatar']).where(User.id == user.id).execute()
-            avatar = DiscordClient.get_avatar(user.discord)
+            try:
+                avatar = DiscordClient.get_avatar(user.discord)
+            except DiscordException:
+                warning(f"Skipping avatar download for {user.discord} (API request failed)")
+                continue
             if avatar is not None:
                 with open(join(path,f'{user}.png'), 'wb') as file:
                     file.write(avatar)
