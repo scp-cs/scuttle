@@ -9,6 +9,6 @@
         <p class="m-0 text-sm"><b>{{stats.original_count}}</b> Článků</p>
         <p class="m-0 text-sm">Nejnovější článek: <b><a href="{{last.link}}" class="text-white transition-opacity hover:opacity-75" target="_top">{{last.name}}</b></a></p>
     </div>
-    <div class="absolute top-0 right-0 block p-2 font-semibold text-white rounded-tr-lg rounded-bl-lg bg-gradient-to-r from-teal-200 to-teal-500">Spisovatel</div>
+    {{role_badge(stats.original_count, RoleType.WRITER, override_classes=True, classes="absolute top-0 right-0 block text-white p-2 rounded-bl-lg font-semibold rounded-tr-lg")}}
     <a href="https://scuttle.scp-wiki.cz" class="absolute bottom-0 text-xs text-white no-underline transition-opacity opacity-25 right-1 hover:opacity-100" target="_top">Powered by SCUTTLE</a>
 </div>

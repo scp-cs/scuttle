@@ -47,7 +47,7 @@ def login():
 def logout():
     logout_user()
     flash('Uživatel odhlášen')
-    return redirect(request.referrer or url_for('LeaderboardController.index'))
+    return redirect(url_for('LeaderboardController.index'))
 
 @AuthController.route('/user/pw_change', methods=["GET", "POST"])
 def pw_change():

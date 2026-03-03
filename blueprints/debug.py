@@ -2,7 +2,7 @@ from http import HTTPStatus
 from logging import critical, warning, error, info, debug
 from flask import Blueprint, redirect, url_for, current_app, request, render_template, send_from_directory, flash, abort
 from flask_login import login_required, current_user
-from db import Backup
+from db import Backup, User
 from datetime import datetime
 import os
 import py7zr 
@@ -31,6 +31,13 @@ def avdownload():
     sched.run_job('Download avatars')
     flash("Aktualizace spuštěna na pozadí!")
     return redirect(request.referrer or url_for('LeaderboardController.index'))
+
+@DebugToolsController.route('/debug/invalidate_avatar_cache')
+@login_required
+def av_cache_invalidate():
+    User.update(avatar_hash=None).execute()
+    flash("Cache zneplatněna, příští aktualizace stáhne všechny avatary")
+    return redirect(url_for('DebugToolsController.debug_index'))
 
 @DebugToolsController.route('/debug/rssupdate')
 @login_required

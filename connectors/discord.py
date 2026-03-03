@@ -28,7 +28,7 @@ class DiscordClient():
 
     @staticmethod
     def init_app(app):
-        auth_token = app.config.get('DISCORD_TOKEN', "")
+        auth_token = app.config['DISCORD']['TOKEN']
         DiscordClient.__auth_token = auth_token
         DiscordClient.__request_headers = {
             "User-Agent": API_UA,
