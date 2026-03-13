@@ -1,11 +1,16 @@
 from http import HTTPStatus
 from logging import critical, warning, error, info, debug
-from flask import Blueprint, redirect, url_for, current_app, request, render_template, send_from_directory, flash, abort
+from flask import Blueprint, redirect, url_for, current_app, request, render_template, send_from_directory, flash, abort, send_file
 from flask_login import login_required, current_user
-from db import Backup, User
+from db import Backup, User, Article
 from datetime import datetime
 import os
-import py7zr 
+import py7zr
+import io
+import requests
+from lxml import etree
+from os import path, getcwd
+from urllib.parse import urlparse, urlunparse
 
 from connectors.wikidotsite import snapshot_all
 from connectors.portainer import PortainerError
@@ -162,4 +167,72 @@ def extract_snapshots():
     else:
         flash(f"Soubory extrahovány do {snapshot_path}")
         info(f"Files extracted succesfully")
-    return redirect(request.referrer or url_for("DebugToolsController.debug_index"))    
+    return redirect(request.referrer or url_for("DebugToolsController.debug_index"))
+
+@DebugToolsController.route('/debug/normalize_links')
+@login_required
+def normalize_links():
+    # Removes trailing newlines from all links in the database
+    # And sets the URL scheme to HTTP
+    updated_count = 0
+    for a in Article.select():
+        link: str = a.link
+        oldlink = link
+        if not a:
+            warning(f'Link missing for {a.name}')
+            continue
+        link = link.removesuffix('\n')
+        parsed = urlparse(link)
+        link = parsed._replace(scheme='http').geturl()
+        # Only save the new link if it doesn't match the old one
+        if oldlink != link:
+            debug(f"{oldlink.encode('unicode_escape').decode('utf-8')} -> {link}")
+            a.link = link
+            a.save()
+            updated_count += 1
+    flash(f"{updated_count} odkazů upraveno")
+    return redirect(url_for('DebugToolsController.debug_index'))
+
+@DebugToolsController.route('/debug/compare_sitemap')
+@login_required
+def compare_sitemap():
+    ignored_prefixes = ['nav:', 'system:', 'fragment:', 'component:', 'theme:', 'search:', 'css:', 'legal:', 'info:', 'forum:']
+    wikis = [w['target_wiki'] for w in current_app.config['MONITORED_WIKIS']]
+    links = []
+
+    for wiki in wikis:
+        sitemap_url = f"http://{wiki}.wikidot.com/sitemap.xml"
+        sitemap_fetch = requests.get(sitemap_url)
+        if(sitemap_fetch.status_code != HTTPStatus.OK):
+            error(f"Fetch sitemap failed for {wiki}")
+            continue
+        try:
+            sitemap_tree = etree.fromstring(sitemap_fetch.text.encode('utf-8'))
+        except etree.XMLSyntaxError as e:
+            error(f"Error parsing sitemap for {wiki}: {str(e)}")
+            continue
+        # The sitemap is a <urlset> tag containing <url> tags
+        # The url tags always have a <loc> tag as the first child, containing the actual link
+        # Some of the urls may also have a <lastmod> tag containing the last modified date
+        for site in sitemap_tree:
+            links.append(site[0].text)
+
+    temp_file_path = path.join(getcwd(), 'temp', 'sitemap_compare.txt')
+    sys_page_count = 0
+    missing_page_count = 0
+
+    with open(temp_file_path, 'w') as logfile:
+        for link in links:
+            slug: str = urlparse(link).path.removeprefix('/')
+            if slug.startswith(tuple(ignored_prefixes)):
+                sys_page_count += 1
+                continue
+            if not Article.get_or_none(Article.link ** f'%{slug}'):
+                missing_page_count += 1
+                logfile.write(f"MISSING - {link} ({slug})\n")
+        logfile.write('\n' + 50*'=' + '\n')
+        logfile.write(f"{missing_page_count} pages missing from database\n")
+        logfile.write(f"{sys_page_count} system pages ignored\n")
+
+    flash("Protokol odeslán ke stažení")
+    return send_file(temp_file_path, download_name="sitemap_compare.txt", as_attachment=True)
