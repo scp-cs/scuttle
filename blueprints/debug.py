@@ -128,18 +128,21 @@ def raise_critical_error():
     abort(HTTPStatus.INTERNAL_SERVER_ERROR)
 
 @DebugToolsController.route('/debug/backup/forceend')
+@login_required
 def force_end_backup():
     Backup.update(is_finished=True).execute()
     flash("Záloha ukončena")
     return redirect(request.referrer or url_for('LeaderboardController.index'))
 
 @DebugToolsController.route('/debug/backup/snapshot_all')
+@login_required
 def make_all_snapshots():
     snapshot_all()
     flash("Snímky vytvořeny")
     return redirect(request.referrer or url_for('LeaderboardController.index'))
 
 @DebugToolsController.route("/debug/extract_snapshots")
+@login_required
 def extract_snapshots():
     last_backup = Backup.select().order_by(Backup.date.desc()).first()
     backup_filename = str(last_backup.sha1) + '.7z'
