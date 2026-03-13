@@ -193,6 +193,7 @@ def normalize_links():
     flash(f"{updated_count} odkazů upraveno")
     return redirect(url_for('DebugToolsController.debug_index'))
 
+# TODO: Make this go both ways - mark pages that are present in DB but missing on site
 @DebugToolsController.route('/debug/compare_sitemap')
 @login_required
 def compare_sitemap():
