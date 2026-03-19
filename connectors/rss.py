@@ -9,7 +9,7 @@ from flask import Flask
 from enum import IntEnum
 from typing import Optional
 from collections import deque
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 # Internal
 from db import User, Article, last_update
@@ -17,7 +17,6 @@ import connectors.wikidotsite as wikidotsite
 from utils import config_has_key
 
 # External
-import requests
 import feedparser
 from peewee import fn
 
@@ -205,6 +204,7 @@ class RSSMonitor:
                 feed = feedparser.parse(link).get('entries')
             except Exception as e:
                 error(f"RSS Update failed for feed {link} ({e})")
+                continue
                 
             for update in feed:
                 if self._process_update(update): new_count += 1

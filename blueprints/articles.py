@@ -6,6 +6,7 @@ from logging import info, error
 # External
 from flask import Blueprint, flash, redirect, request, render_template, abort, url_for, session, current_app
 from flask_login import current_user, login_required
+from urllib.parse import urlparse
 
 # Internal
 from forms import NewArticleForm, EditArticleForm, AssignCorrectionForm
@@ -14,6 +15,12 @@ from extensions import rss, webhook
 from db import User, Article
 
 ArticleController = Blueprint('ArticleController', __name__)
+
+def normalize_link(link: str) -> str:
+    newlink = link.removesuffix('\n')
+    parsed = urlparse(newlink)
+    newlink = parsed._replace(scheme='http').geturl()
+    return newlink
 
 def check_role_and_notify(uid: int, point_amount: float, original: bool):
     promoted_user = User.get_or_none(User.id == uid)
@@ -73,7 +80,7 @@ def add_article(uid):
     article.words = form.words.data
     article.bonus = form.bonus.data
     article.author = User.get_by_id(uid)
-    article.link = form.link.data
+    article.link = normalize_link(form.link.data)
     article.is_original = is_original
 
     article.save()

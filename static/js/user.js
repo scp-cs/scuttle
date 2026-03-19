@@ -289,7 +289,19 @@ function addOriginalRow(article, hasAuth) {
 
 function addCorrectionRow(correction, hasAuth) {
     let template = $('#correction-row-template').contents().clone(true, true)
-    template.find('#correction-name').text(correction.article.name)
+    //template.find('#correction-name').text(correction.article.name)
+
+    if(correction.article.link) {
+        let link = $("<a>", {
+            class: "hover:underline",
+            href: correction.article.link,
+            target: "_blank",
+            text: correction.article.name})
+        template.find("#correction-name").append(link)
+    } else {
+        template.find("#correction-name").addClass("text-gray-500").text(correction.article.name)
+    }
+
     template.find('#correction-words').text(correction.article.words)
 
     let authorLink = $("<a>", {
