@@ -69,7 +69,7 @@ def download_avatars_task(av_path: str | PathLike = './temp/avatar', override_us
                 updated += 1
             else:
                 skipped += 1
-                error(f"Avatar download failed for {user.nickname} ({user.discord})")
+                warning(f"Avatar download failed for {user.nickname} ({user.discord})")
         else:
             cached += 1
             debug(f"Skipping avatar update for {user.discord} (Avatar hashes match)")

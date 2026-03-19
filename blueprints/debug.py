@@ -55,7 +55,7 @@ def debug_index():
 @login_required
 def webhook_testing():
     try:
-        webhook.send_text('TEST MESSAGE')
+        webhook.send_text('TEST MESSAGE', files=[('hi.txt', 'hewwo')])
         flash("Testovací webhook odeslán!")
     except Exception as e:
         flash("Testovací webhook se nepodařilo odeslat (zkontrolujte logy)")

@@ -66,7 +66,7 @@ class DiscordClient():
             warning(f'Discord user API returned 404 for {uid}')
             return None
         else:
-            error(f'Discord API request failed for {uid}')
+            warning(f'Discord API request failed for {uid} with weird status code {response.status_code}')
             raise DiscordException("API Request failed")
 
     @staticmethod
@@ -89,7 +89,7 @@ class DiscordClient():
             raise e
         if user is None:
             return None
-        if user['global_name'] == None:
+        if user['global_name'] is None:
             return user['username']
         return user['global_name']
 
@@ -149,14 +149,15 @@ class DiscordWebhook():
         self.url = app.config['WEBHOOK']['WEBHOOK_URL']
         self.notify = app.config['DISCORD_ROLEMASTER_ID']
         self.mock = app.config.get("DEBUG_DISABLE_WEBHOOKS", False) and app.config.get("DEBUG", False)
+        self.debug = app.config.get("DEBUG", False)
 
-    def send_text(self, message: str, ping_user: int = 0) -> None:
+    def send_text(self, message: str, ping_user: int = 0, files: t.List[t.Tuple[str, str]] = []) -> None:
         if not self.url:
             raise RuntimeError('Cannot send an uninitialized webhook (no URL specified)')
         if self.mock:
             debug(f"Mock send webhook with message \"{message}\" with ping for {self.notify or ping_user or '[nobody]'}")
             return
-        if current_app.config['DEBUG'] == True:
+        if self.debug:
             message = f"[TESTOVACÍ REŽIM - PROSÍM IGNORUJTE] {message}"
         if len(message) > 2000:
             raise ValueError(f'Message is too long ({len(message)} characters)')
@@ -166,8 +167,21 @@ class DiscordWebhook():
             data = {"content": f'<@{self.notify}> {message}'}
         else:
             data = {"content": message}
+        '''if files:
+            data['attachments'] = []
+            for idx, file in enumerate(files):
+                data['attachments'] += [{
+                    'id': idx,
+                    'filename': file[0]
+                }]'''
         info('Sending webhook')
         try:
-            webhook_response = requests.post(self.url, json=data)
+            if not files:
+                webhook_response = requests.post(self.url, json=data)
+            else:
+                print(data)
+                webhook_response = requests.post(self.url, data=data, files=files)
+                print(webhook_response.status_code)
+                print(webhook_response.content)
         except Exception as e:
             error(f'Webhook failed to send ({str(e)})')

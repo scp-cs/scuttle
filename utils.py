@@ -3,6 +3,9 @@ import os
 import itertools
 from json import load, dump, JSONDecodeError
 from secrets import token_hex
+from connectors.discord import DiscordWebhook
+from datetime import datetime
+import traceback
 
 import logging
 
@@ -43,7 +46,8 @@ def config_has_key(config: dict, key: str, check_true = False) -> bool:
     subkey = config
     for k in keys:
         subkey = subkey.get(k)
-        if not subkey: return False
+        if not subkey: 
+            return False
     if not check_true:
         return True
     else:
@@ -60,3 +64,28 @@ def count_files_rec(dir: str | os.PathLike) -> int:
     # itertools.chain gives us a generator again because this language is silly
     # empty it into a list again and return the length
     return len(list(flat_list))
+
+class DiscordErrorHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self._webhook: DiscordWebhook = None
+        self._enabled = False
+
+    def set_webhook(self, webhook: DiscordWebhook):
+        self._webhook = webhook
+        self._enabled = True
+        self._last_sent = datetime(1970, 1, 1)
+
+    def emit(self, record):
+        if not self._enabled: 
+            return
+        if(record.levelno >= logging.ERROR):
+            if((datetime.now() - self._last_sent).total_seconds() < 10800):
+                logging.info("Not sending error report to prevent webhook spam")
+                return
+            self._last_sent = datetime.now()
+            current_log = open(os.path.join(os.getcwd(), 'translatordb.log'), 'r', encoding='utf-8')
+            last_lines = current_log.readlines()[-100:]
+            self._webhook.send_text(f"```Chyba v modulu {record.module} - {record.message}\nProtokol aplikace a trasa zásobníku přiloženy ke zprávě.```",\
+                                    files=[('log.txt', ''.join(last_lines)), ('stack_trace.txt', ''.join(traceback.format_stack()))])
+            current_log.close()

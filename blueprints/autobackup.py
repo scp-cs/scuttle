@@ -76,8 +76,7 @@ def finish_backup():
         with open(archive_path, 'rb') as archive:
             hash = hashlib.sha1(archive.read()).hexdigest()
     except Exception as e:
-        error("Couldn't compress backup (check config paths)")
-        error(str(e))
+        error(f"Couldn't compress backup (check config paths): {str(e)}")
         # Let the admin know that something went wrong
         webhook.send_text("```Záloha selhala (nepodařilo se vytvořit archiv)```")
         statuses.clear()
@@ -222,7 +221,7 @@ def backup_status():
         case MessageType.ErrorNonfatal:
             current_message.error_kind = ErrorKind(message['errorKind'])
             current_message.error_message = str(current_message.error_kind)
-            error(f"Encountered non-fatal error: {current_message.error_message}")
+            warning(f"Encountered non-fatal error: {current_message.error_message}")
             with statuses[tag].mutex:
                 statuses[tag].status.messages.append(current_message)
         case MessageType.FinishSuccess:

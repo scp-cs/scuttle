@@ -16,7 +16,7 @@ from connectors.discord import DiscordClient
 from connectors.rss import RSSUpdateType
 from framework.menu import navigation_menu
 from framework.roles import role_badge, get_all_badges, RoleType, role_type_to_points, has_badge
-from utils import ensure_config, config_has_key
+from utils import ensure_config, config_has_key, DiscordErrorHandler
 from tasks import discord_tasks, backup_task
 from db import User
 from crypto import generate_signing_keys
@@ -54,6 +54,7 @@ def init_logger() -> None:
     handler_st = logging.StreamHandler()
     handler_st.setFormatter(logging.Formatter(LOGGER_FORMAT_STR))
     logging.getLogger().addHandler(handler_st)
+    
 
 def fix_proxy() -> None:
     """
@@ -133,6 +134,10 @@ def extensions_init() -> None:
     if config_has_key(app.config, 'WEBHOOK.WEBHOOK_URL') and config_has_key(app.config, 'DISCORD_ROLEMASTER_ID'):
         webhook.init_app(app)
         app.config['WEBHOOK_ENABLE'] = True
+        handler_discord = DiscordErrorHandler()
+        handler_discord.setFormatter(logging.Formatter(LOGGER_FORMAT_STR))
+        handler_discord.set_webhook(webhook)
+        logging.getLogger().addHandler(handler_discord)
     else:
         app.config['WEBHOOK_ENABLE'] = False
 

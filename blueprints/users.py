@@ -136,7 +136,7 @@ def revoke_admin_perms(uid: int):
         abort(HTTPStatus.FORBIDDEN)
 
     user.temp_pw = 1
-    user.password = None;
+    user.password = None
     user.save()
 
     info(f"Administrator permissions revoked from {user.nickname} (ID: {uid}) by {current_user.nickname} (ID: {current_user.get_id()})")
