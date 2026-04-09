@@ -6,7 +6,7 @@ Details on the scoring system can be found on our [Discord](https://discord.gg/A
 
 ## Features
 
-- Stores article metadata (name, translator, wiki page, word count and bonus translator points)
+- Stores article metadata (name, author/translator, wiki page, word count and bonus translator points)
     - Shows a leaderboard for branch members to view
     - Allows searching
     - API for integration with other tools
