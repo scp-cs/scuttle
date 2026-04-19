@@ -1,5 +1,8 @@
 import datetime
-from peewee import *
+from peewee import (
+    SqliteDatabase, TextField, AutoField, BooleanField, TimestampField, BlobField,
+    DateTimeField, ForeignKeyField, CharField, IntegerField, Model, FloatField, fn
+)
 from logging import debug
 
 database = SqliteDatabase("data/scp.db")
@@ -12,6 +15,78 @@ def create_views(database: SqliteDatabase):
 
     # TODO: This is so fucking horrible like what am I even looking at whz did I write this
 
+    """
+    correction_count = (
+    Correction
+    .select(fn.COUNT(Correction.article_id))
+    .where(Correction.corrector == User.id)
+).alias("correction_count")
+
+query = (
+    User
+    .select(
+        User.id,
+        User.nickname,
+        User.discord,
+        User.wikidot,
+        User.display_name.alias("display"),
+
+        fn.SUM(
+            Case(None, [(Article.is_original == False, 1)], 0)
+        ).alias("translation_count"),
+
+        (
+            fn.SUM(
+                Case(None, [(Article.is_original == False, Article.words)], 0)
+            ) / 1000.0 + fn.TOTAL(Article.bonus)
+        ).alias("points"),
+
+        correction_count,
+
+        fn.SUM(
+            Case(None, [(Article.is_original == True, 1)], 0)
+        ).alias("original_count"),
+    )
+    .join(Article, JOIN.LEFT_OUTER, on=(User.id == Article.idauthor))
+    .group_by(User.id)
+)
+    """
+
+    """
+    scp_pattern_short = Article.name ** 'SCP-___'   # ** is LIKE in Peewee
+scp_pattern_long  = Article.name ** 'SCP-____'
+
+first_query = (
+    Article
+    .select(
+        ((fn.SUBSTR(Article.name, 5).cast('INTEGER') / 1000) + 1).alias("series"),
+        fn.COUNT(Article.id).alias("articles"),
+        fn.SUM(Article.words).alias("words"),
+    )
+    .where(
+        (scp_pattern_short | scp_pattern_long) &
+        (Article.is_original == False)
+    )
+    .group_by(SQL("series"))
+)
+
+second_query = (
+    Article
+    .select(
+        Value(999).alias("series"),
+        fn.COUNT(Article.id).alias("articles"),
+        fn.SUM(Article.words).alias("words"),
+    )
+    .where(
+        ~scp_pattern_short &
+        ~scp_pattern_long &
+        (Article.is_original == False)
+    )
+)
+
+query = first_query.union(second_query)
+    """
+
     database.execute_sql("CREATE VIEW IF NOT EXISTS Frontpage AS\
     SELECT User.id AS id, User.nickname AS nickname, User.discord AS discord, User.wikidot AS wikidot, User.display_name as display, \
         SUM(CASE WHEN Article.is_original=FALSE THEN 1 ELSE 0 END) AS translation_count, \
@@ -22,6 +97,8 @@ def create_views(database: SqliteDatabase):
                 LEFT JOIN Article \
                     ON User.id = Article.idauthor\
             GROUP BY User.id;")
+    
+    User.select(User.id, User.nickname, User.discord, User.wikidot, User.display_name)
     
     database.execute_sql("CREATE VIEW IF NOT EXISTS Series AS \
         SELECT (SUBSTR(name, 5)/1000)+1 AS series, COUNT(id) AS articles, SUM(words) AS words \
@@ -67,7 +144,7 @@ class User(BaseModel):
 
     @property
     def can_login(self) -> bool:
-        return self.password != None
+        return self.password is not None
     
     # Flask-Login stuff
     is_anonymous = False
@@ -199,6 +276,7 @@ class Statistics(ViewModel):
     class Meta:
         table_name = 'Statistics'
 
+"""
 class Correction(ViewModel):
     article = ForeignKeyField(Article, field='id', column_name='article_id', backref='correction')
     author = ForeignKeyField(User, field='id', column_name='author')
@@ -215,6 +293,12 @@ class Correction(ViewModel):
             'timestamp': self.timestamp,
             'words': self.words
         }
+""" 
+
+class Correction(BaseModel):
+    article = ForeignKeyField(Article, field='id', backref='corrections')
+    corrector = ForeignKeyField(User, field='id', backref='corrections')
+    timestamp = DateTimeField()
 
 class Frontpage(ViewModel):
     user = ForeignKeyField(User, field='id', column_name='id', backref='stats')
@@ -223,7 +307,7 @@ class Frontpage(ViewModel):
     correction_count = IntegerField()
     original_count = IntegerField()
 
-models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki]
+models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki, Correction]
 
 def last_update() -> datetime.datetime:
     return Article.select(fn.MAX(Article.added)).scalar() or datetime.datetime(year=1990, month=1, day=1)

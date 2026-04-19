@@ -2,15 +2,14 @@ from http import HTTPStatus
 from logging import critical, warning, error, info, debug
 from flask import Blueprint, redirect, url_for, current_app, request, render_template, send_from_directory, flash, abort, send_file
 from flask_login import login_required, current_user
-from db import Backup, User, Article
+from db import Backup, User, Article, Correction
 from datetime import datetime
 import os
 import py7zr
-import io
 import requests
 from lxml import etree
 from os import path, getcwd
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 
 from connectors.wikidotsite import snapshot_all
 from connectors.portainer import PortainerError
@@ -166,7 +165,7 @@ def extract_snapshots():
         error(f"Extraction failed ({str(e)})")
     else:
         flash(f"Soubory extrahovány do {snapshot_path}")
-        info(f"Files extracted succesfully")
+        info("Files extracted succesfully")
     return redirect(request.referrer or url_for("DebugToolsController.debug_index"))
 
 @DebugToolsController.route('/debug/normalize_links')
@@ -191,6 +190,18 @@ def normalize_links():
             a.save()
             updated_count += 1
     flash(f"{updated_count} odkazů upraveno")
+    return redirect(url_for('DebugToolsController.debug_index'))
+
+@DebugToolsController.route('/debug/migrate_corrections')
+@login_required
+def migrate_corrections():
+    info("Migrating corrections to new table")
+    count = 0
+    for correction in list(Correction.select().prefetch(User, Article)):
+        CorrectionNew.insert(corrector=correction.corrector.id, timestamp=correction.timestamp, article=correction.article.id).execute()
+        count += 1
+    info(f"{count} rows inserted")
+    flash("Migrace dokončena")
     return redirect(url_for('DebugToolsController.debug_index'))
 
 # TODO: Make this go both ways - mark pages that are present in DB but missing on site
