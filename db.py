@@ -67,7 +67,7 @@ class User(BaseModel):
 
     @property
     def can_login(self) -> bool:
-        return self.password != None
+        return self.password is not None
     
     # Flask-Login stuff
     is_anonymous = False
@@ -117,28 +117,11 @@ class Article(BaseModel):
     class Meta:
         table_name = 'Article'
 
-class Backup(BaseModel):
-    id = AutoField()
-    articles = IntegerField()
-    date = DateTimeField(default=datetime.datetime.now)
-    fingerprint = BlobField()
-    author = ForeignKeyField(column_name='idauthor', field='id', model=User, backref='backups')
-    sha1 = BlobField()
-
-    class Meta:
-        table_name = 'Backup'
-
-class Note(BaseModel):
-    id = AutoField()
-    content = TextField()
-    author = ForeignKeyField(column_name='idauthor', field='id', model=User, backref='created_notes')
-    title = TextField()
-    related_article = ForeignKeyField(column_name='related_article', field='id', model=Article, backref="notes", null=True)
-    related_user = ForeignKeyField(column_name='related_user', field='id', model=User, backref="notes", null=True)
-    related_backup = ForeignKeyField(column_name='related_backup', field='id', model=Backup, backref="notes", null=True)
-
-    class Meta:
-        table_name = 'Note'
+class ExtraLink(BaseModel):
+    article = ForeignKeyField(model=Article, backref='extra_links', field='id')
+    link = TextField()
+    title = TextField(null=True)
+    description = TextField(null=True)
 
 class UserType(BaseModel):
     id = AutoField()
@@ -162,6 +145,19 @@ class Backup(BaseModel):
     fingerprint = CharField(16, null=True)
     sha1 = CharField(48, null=True, unique=True)
     is_finished = BooleanField(default=False)
+
+class Note(BaseModel):
+    id = AutoField()
+    content = TextField()
+    author = ForeignKeyField(column_name='idauthor', field='id', model=User, backref='created_notes')
+    title = TextField()
+    related_article = ForeignKeyField(column_name='related_article', field='id', model=Article, backref="notes", null=True)
+    related_user = ForeignKeyField(column_name='related_user', field='id', model=User, backref="notes", null=True)
+    related_backup = ForeignKeyField(column_name='related_backup', field='id', model=Backup, backref="notes", null=True)
+
+    class Meta:
+        table_name = 'Note'
+
 
 class Wiki(BaseModel):
     id = AutoField()
@@ -222,6 +218,8 @@ class Frontpage(ViewModel):
     points = FloatField()
     correction_count = IntegerField()
     original_count = IntegerField()
+
+
 
 models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki]
 
