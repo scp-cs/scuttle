@@ -6,21 +6,35 @@ Details on the scoring system can be found on our [Discord](https://discord.gg/A
 
 ## Features
 
-- Stores translation metadata (name, translator, wiki page, word count and bonus translator points)
+- Stores article metadata (name, author/translator, wiki page, word count and bonus translator points)
+    - Shows a leaderboard for branch members to view
+    - Allows searching
+    - API for integration with other tools
+    - Shows overall statistics of all translated pages
+- Notifies branch administrators of users eligible for new discord roles over channel webhooks
 - Stores user info (nickname, Wikidot ID, Discord username)
-- Automatically fetches nicknames and profile avatars from Discord
+    - Automatically fetches nicknames and profile avatars from Discord
+- Automatically fetches new articles from RSS feeds
+- Updates article corrections based on RSS feeds
 - Login using classic credentials or Discord OAuth
-- Integrates with [WikiComma](https://gitlab.com/DBotThePony/wikicomma) and provides a UI to configure and manage backups
+- Integrates with our fork of [WikiComma](https://gitlab.com/DBotThePony/wikicomma)
+  - Provides a UI to configure backup settings and manage past backups
+  - Automatically schedules and runs backups at set intervals
+  - Integrates with [Portainer](https://www.portainer.io/) to run WikiComma safely inside a container
+  - Cryptographically signs backups using PGP and calculates checksums
+  - Saves snapshots of original articles when a translation is published and includes them in backups
+  - Sends a backup summary over Discord Webhooks on completion
+- Generates embeddable badges for members' personal files which update in real time, support for different themes
 - Fully Dockerized
 
 ## Planned features
 
-- [X] Fetching new pages from RSS feeds
 - [ ] Note system for moderators
-- [X] A statistics page
 - [ ] Automatic word counting (hard >w<)
 - [ ] Improve responsivity on mobile and smaller windows
 - [ ] Localization (Low-prio for now, if you want to use SCUTTLE on your branch, let us know!)
+- [ ] Integrated modern backup tool to replace WikiComma
+- [ ] A backup browser for viewing and restoring archived pages
 
 ## Installation (manual)
 ### 1. Clone the repository
