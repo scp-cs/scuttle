@@ -44,10 +44,10 @@ class PortainerConnector():
     def requires_auth(func):
         @wraps(func)
         def wrapper(self, *args, **kwargs):
-            if getattr(self, 'url', None) == None:
+            if getattr(self, 'url', None) is None:
                 raise PortainerError('No Portainer URL')
             if not hasattr(self, '_jwt'):
-                raise PortainerError(f"Not logged in")
+                raise PortainerError("Not logged in")
             return PortainerConnector.requires_init(func(self, *args, **kwargs))
         return wrapper
 
@@ -146,7 +146,7 @@ class PortainerConnector():
 
         json = response.json()
         if len(json) != 1:
-            raise PortainerError(f"Got multiple containers or none at all")
+            raise PortainerError("Got multiple containers or none at all")
 
         return json[0]['Id']
 
