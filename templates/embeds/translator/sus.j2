@@ -1,0 +1,50 @@
+<head>
+<link rel="stylesheet" href="{{url_for('static', filename='css/badge.css')}}">
+<style>
+@keyframes eject {
+    0%   { left: -8%;  transform: rotate(0deg); }
+    100% { left: 108%; transform: rotate(720deg); }
+}
+.amongusak {
+    position: absolute;
+    font-size: 26px;
+    line-height: 1;
+    font-weight: 700;
+    text-shadow: 0 0 4px rgba(0,0,0,.55);
+    animation-name: eject;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+    will-change: left, transform;
+    pointer-events: none;
+    user-select: none;
+}
+</style>
+</head>
+
+<div class="relative flex flex-row items-center justify-start h-24 bg-black rounded-lg" style="overflow:hidden;">
+    <img class="z-40 block h-full border border-white border-solid rounded-l-lg" src="{{ url_for('ContentController.get_avatar', uid=(user.discord or 0), s='full')}}">
+
+    <div class="absolute top-0 left-0 w-full h-full" style="pointer-events:none; overflow:hidden;">
+        <span class="amongusak" style="top:4px;  color:#C51111; animation-duration:5.1s; animation-delay:0s;">ඞ</span>
+        <span class="amongusak" style="top:22px; color:#132ED1; animation-duration:7.5s; animation-delay:.5s;">ඞ</span>
+        <span class="amongusak" style="top:40px; color:#117F2D; animation-duration:6.3s; animation-delay:1.2s;">ඞ</span>
+        <span class="amongusak" style="top:58px; color:#ED54BA; animation-duration:8.7s; animation-delay:.8s;">ඞ</span>
+        <span class="amongusak" style="top:14px; color:#EF7D0E; animation-duration:6.8s; animation-delay:2.1s;">ඞ</span>
+        <span class="amongusak" style="top:64px; color:#F5F557; animation-duration:5.6s; animation-delay:1.6s;">ඞ</span>
+        <span class="amongusak" style="top:30px; color:#6B2FBB; animation-duration:8.2s; animation-delay:2.6s;">ඞ</span>
+        <span class="amongusak" style="top:48px; color:#38FEDC; animation-duration:6.1s; animation-delay:.2s;">ඞ</span>
+        <span class="amongusak" style="top:8px;  color:#50EF39; animation-duration:7.1s; animation-delay:3.0s;">ඞ</span>
+        <span class="amongusak" style="top:70px; color:#71491E; animation-duration:8.5s; animation-delay:1.4s;">ඞ</span>
+        <span class="amongusak" style="top:24px; color:#D6E0F0; animation-duration:6.6s; animation-delay:2.7s;">ඞ</span>
+        <span class="amongusak" style="top:52px; color:#3F474E; animation-duration:7.8s; animation-delay:.6s;">ඞ</span>
+    </div>
+
+    <div class="relative z-10 flex flex-col flex-1 h-full pl-4 text-white bg-transparent rounded-r-lg">
+        <h1 class="m-0 mt-1 text-xl font-bold text-white" style="text-shadow:0 0 4px rgba(0,0,0,.8);">{{user.wikidot}}</h1>
+        <p class="m-0 text-sm" style="text-shadow:0 0 4px rgba(0,0,0,.8);"><b>{{"%.1f" % stats.points}}</b> Překladatelských bodů</p>
+        <p class="m-0 text-sm" style="text-shadow:0 0 4px rgba(0,0,0,.8);"><b>{{stats.translation_count}}</b> Přeložených článků</p>
+        <p class="m-0 text-sm" style="text-shadow:0 0 4px rgba(0,0,0,.8);">Poslední překlad: <b><a href="{{last.link}}" class="text-white transition-opacity hover:opacity-75" target="_top">{{last.name}}</b></a></p>
+    </div>
+    {{role_badge(stats.points, override_classes=True, classes="absolute top-0 right-0 z-40 block text-white p-2 rounded-bl-lg font-semibold rounded-tr-lg")}}
+    <a href="https://scuttle.scp-wiki.cz" class="absolute bottom-0 z-40 text-xs text-white no-underline transition-opacity opacity-25 right-1 hover:opacity-100" target="_top">Powered by SCUTTLE</a>
+</div>
