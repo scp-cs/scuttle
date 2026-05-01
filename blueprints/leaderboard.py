@@ -4,7 +4,7 @@ from flask import Blueprint, request, render_template
 # Internal
 import db
 from db import User
-from framework.roles import RoleType
+from framework.roles import RoleType, role_exists
 
 LeaderboardController = Blueprint('LeaderboardController', __name__)
 
@@ -13,6 +13,7 @@ def index():
     sort = request.args.get('sort', type=str, default='points')
     page = request.args.get('p', type=int, default=0)
     role_type = request.args.get('r_type', type=str, default='translator')
+    role_type = role_type if role_exists(role_type) else 'translator'
     user_count = User.select().count()
     last_update = db.last_update().strftime("%Y-%m-%d %H:%M:%S")
     data = db.get_frontpage(sort, page, role_type)

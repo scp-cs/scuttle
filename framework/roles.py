@@ -57,6 +57,12 @@ def role_type_to_points(type: RoleType, stats: Frontpage) -> float:
         case _:
             return 0.0
 
+        
+def role_exists(role_name: str) -> bool:
+    if role_cache is None:
+        load_role_file()
+    return (role_name in role_cache)
+
 def get_all_badges(stats: Frontpage, classes: str = "", override_classes: bool = False) -> str:
     if role_cache is None:
         load_role_file()
