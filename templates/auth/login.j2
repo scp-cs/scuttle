@@ -1,11 +1,19 @@
 {% extends "base.j2" %}
 
 {% block content %}
-<div class="flex flex-col items-center justify-center w-full h-full md:p-10">
 
+<div class="flex absolute top-0 items-center w-full justify-center">
+<div class=" p-6 w-fit text-center absolute top-4 border rounded-lg border-orange-500/40 bg-orange-500/10">
+        <h1 class="mb-2 text-xl font-bold">Upozornění / Notice</h1>
+        Přihlášení do systému je určené pouze administrátorům stránky. Váš discord účet nebude fungovat.<br>
+        This login page is for site admins only, your discord account will not work.
+    </div>
+</div>
 
+<div class="flex flex-col items-center justify-center h-full">
 
 <form method="post" class="flex flex-col items-center w-auto px-24 py-8 text-lg border shadow-2xl bg-black/30 backdrop-blur-sm border-slate-900 md:rounded-xl">
+    
     <h1 class="pb-6 text-3xl font-semibold">Přihlásit se</h1>
     {{ form.hidden_tag() }}
     <div>
