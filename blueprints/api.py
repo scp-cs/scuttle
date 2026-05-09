@@ -2,9 +2,13 @@ from logging import warning, info, error
 from flask import jsonify, request, Blueprint, flash, redirect, url_for, abort
 from flask_login import current_user, login_required
 from datetime import datetime
+import json
 
-from db import Article, User, Frontpage, Correction
+from db import Article, User, Frontpage, Correction, ExtraLink
 from framework.roles import role_badge
+from framework.api.schemas.extra_link_schema import extra_link_schema, link_remove_schema
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 
 ApiController = Blueprint('ApiController', __name__)
 
@@ -44,7 +48,7 @@ def search_article(query):
         }
     } for a in results]
 
-@ApiController.route('/api/search/article_any')
+@ApiController.get('/api/search/article_any')
 def search_any_article():
     query = request.args.get('q', None, str)
     if not query:
@@ -53,7 +57,7 @@ def search_any_article():
     results = search_article(query)
     return result_ok(results)
 
-@ApiController.route('/api/search/article')
+@ApiController.get('/api/search/article')
 def search_user_article():
     query = request.args.get('q', None, str)
     author = request.args.get('u', None, int)
@@ -79,7 +83,7 @@ def search_user_article():
                 }
             } for a in results])
 
-@ApiController.route('/api/search/user')
+@ApiController.get('/api/search/user')
 def search_user():
     query = request.args.get('q', None, str)
     if not query:
@@ -101,7 +105,7 @@ def search_user():
             'points': u.points} for u in user]
     return result_ok(results)
 
-@ApiController.route('/api/user/<int:uid>')
+@ApiController.get('/api/user/<int:uid>')
 def api_get_user(uid: int):
     user = User.get_or_none(User.id == uid)
     if not user: return result_error("User doesn't exist", 404)
@@ -109,7 +113,7 @@ def api_get_user(uid: int):
     results = user.to_dict()
     return result_ok(results)
 
-@ApiController.route('/api/user/<int:uid>/articles')
+@ApiController.get('/api/user/<int:uid>/articles')
 def api_get_articles(uid: int):
     user = User.get_or_none(User.id == uid)
     if not user: return result_error("User doesn't exist", 404)
@@ -146,7 +150,7 @@ def api_get_articles(uid: int):
 
     return result_ok([r.to_dict() for r in select], {"total": total})
 
-@ApiController.route('/api/user/<int:uid>/assign-correction', methods=['POST'])
+@ApiController.post('/api/user/<int:uid>/assign-correction')
 @login_required
 def assign_correction(uid: int):
     article_id = request.form.get('aid', None, int)
@@ -168,7 +172,7 @@ def assign_correction(uid: int):
     flash('Korekce zapsána')
     return result_ok()
 
-@ApiController.route('/api/article/<int:aid>/remove-correction', methods=["POST"])
+@ApiController.post('/api/article/<int:aid>/remove-correction')
 @login_required
 def remove_correction(aid: int):
 
@@ -181,4 +185,36 @@ def remove_correction(aid: int):
     article.corrector = None
     article.save()
     flash('Korekce odstraněna')
+    return result_ok()
+
+@ApiController.post('/api/article/<int:aid>/links/add')
+def add_extra_link(aid: int):
+    article = Article.get_or_none(Article.id == aid)
+    if not article:
+        flash('Neplatný článek')
+        return result_error('Neplatný článek')
+    
+    try:
+        data = json.loads(request.data)
+        validate(data, extra_link_schema)
+    except (ValidationError, json.JSONDecodeError):
+        return result_error("Schema validation failed for request data")
+    
+    ExtraLink.create(article=article, link=data['link'], title=data['name'], description=data['description'])
+    return result_ok()
+
+@ApiController.post('/api/article/<int:aid>/links/remove')
+def remove_extra_link(aid: int):
+    article = Article.get_or_none(Article.id == aid)
+    if not article:
+        flash('Neplatný článek')
+        return result_error('Neplatný článek')
+    
+    try:
+        data = json.loads(request.data)
+        validate(data, link_remove_schema)
+    except (ValidationError, json.JSONDecodeError):
+        return result_error("Schema validation failed for request data")
+    
+    ExtraLink.create(article=article, link=data['link'], title=data['name'], description=data['description'])
     return result_ok()
