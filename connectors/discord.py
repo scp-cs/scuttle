@@ -3,7 +3,6 @@ import json
 import time
 import typing as t
 from logging import warning, error, info, debug
-from flask import current_app
 from http import HTTPStatus
 
 # External
