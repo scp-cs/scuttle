@@ -1,5 +1,7 @@
 import datetime
-from peewee import *
+from peewee import (SqliteDatabase, TextField, AutoField, BooleanField,
+                    BlobField, IntegerField, Model, DateTimeField, ForeignKeyField,
+                    fn, CharField, FloatField, TimestampField)
 from logging import debug
 
 database = SqliteDatabase("data/scp.db")
@@ -221,7 +223,7 @@ class Frontpage(ViewModel):
 
 
 
-models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki]
+models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki, ExtraLink]
 
 def last_update() -> datetime.datetime:
     return Article.select(fn.MAX(Article.added)).scalar() or datetime.datetime(year=1990, month=1, day=1)
