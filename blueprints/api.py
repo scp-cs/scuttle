@@ -200,7 +200,7 @@ def add_extra_link(aid: int):
     except (ValidationError, json.JSONDecodeError):
         return result_error("Schema validation failed for request data")
     
-    ExtraLink.create(article=article, link=data['link'], title=data['name'], description=data['description'])
+    ExtraLink.create(article=article, link=data['link'], title=data.get('name') or None, description=data.get('description'))
     return result_ok()
 
 @ApiController.post('/api/article/<int:aid>/links/remove')
@@ -216,5 +216,8 @@ def remove_extra_link(aid: int):
     except (ValidationError, json.JSONDecodeError):
         return result_error("Schema validation failed for request data")
     
-    ExtraLink.create(article=article, link=data['link'], title=data['name'], description=data['description'])
+    if data.get('link') is None:
+        return result_error("No link specified")
+
+    ExtraLink.delete().where(ExtraLink.link == data['link']).execute()
     return result_ok()
