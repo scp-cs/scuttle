@@ -3,6 +3,7 @@ from flask import jsonify, request, Blueprint, flash, redirect, url_for, abort
 from flask_login import current_user, login_required
 from datetime import datetime
 import json
+from http import HTTPStatus
 
 from db import Article, User, Frontpage, Correction, ExtraLink
 from framework.roles import role_badge
@@ -21,7 +22,7 @@ def result_ok(result = [], extra_data = {}):
         'hasAuth': current_user.is_authenticated
     } | extra_data)
 
-def result_error(error_message = "", status_code = 400):
+def result_error(error_message = "", status_code = HTTPStatus.BAD_REQUEST):
     return jsonify({
             'status': 'error',
             'result': [],
@@ -192,16 +193,32 @@ def add_extra_link(aid: int):
     article = Article.get_or_none(Article.id == aid)
     if not article:
         flash('Neplatný článek')
-        return result_error('Neplatný článek')
+        return result_error('Invalid article ID')
     
     try:
         data = json.loads(request.data)
         validate(data, extra_link_schema)
-    except (ValidationError, json.JSONDecodeError):
+    except ValidationError:
         return result_error("Schema validation failed for request data")
+    except json.JSONDecodeError as e:
+        return result_error(f"Request body is not valid JSON {str(e)}")
+
+    link_exists = ExtraLink.select().where((ExtraLink.article == article) & (ExtraLink.link == data['link'].strip()))
+    if link_exists.exists():
+        return result_error("Link already exists for this article", HTTPStatus.CONFLICT)
     
     ExtraLink.create(article=article, link=data['link'], title=data.get('name') or None, description=data.get('description'))
     return result_ok()
+
+@ApiController.get('/api/article/<int:aid>/links')
+def get_extra_links(aid: int):
+    article = Article.get_or_none(Article.id == aid)
+    if not article:
+        flash('Neplatný článek')
+        return result_error('Invalid article ID')
+
+    links = ExtraLink.select().where(ExtraLink.article == aid)
+    return result_ok([link.to_dict() for link in links], extra_data={"mainLink": article.link})
 
 @ApiController.post('/api/article/<int:aid>/links/remove')
 def remove_extra_link(aid: int):
