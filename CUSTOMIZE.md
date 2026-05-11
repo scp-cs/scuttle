@@ -4,7 +4,7 @@ This file contains instructions for how to adapt SCUTTLE to your own wiki branch
 
 ## Translation
 
-SCUTTLE does not currently support i18n (though it is planned in the future), so you will have to translate strings directly inside the code.
+SCUTTLE does not currently support i18n (though it being worked on), so you will have to translate strings directly inside the code.
 
 To translate the app's UI, you will have to edit the Jinja templates in the `templates` folder. Other strings, such as flash messages, error messages and Discord webhook message templates, are located inside their respective `.py` files inside the `blueprints` and `connectors` folders.
 
