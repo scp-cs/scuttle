@@ -125,6 +125,14 @@ class ExtraLink(BaseModel):
     title = TextField(null=True)
     description = TextField(null=True)
 
+    def to_dict(self) -> dict:
+        return {
+            'articleId': self.article.id,
+            'link': self.link,
+            'title': self.title,
+            'desc': self.description
+        }
+
 class UserType(BaseModel):
     id = AutoField()
     name = TextField(unique=True)
