@@ -247,6 +247,9 @@ function addTranslationRow(article, hasAuth) {
         template.append(action_template)
     }
 
+    template.attr('id', `t-${article.id}`)
+    template.attr("data-article-id", article.id)
+
     $("#tb-articles").append(template)
 }
 
@@ -284,6 +287,9 @@ function addOriginalRow(article, hasAuth) {
         template.append(action_template)
     }
 
+    template.attr("id", `o-${article.id}`)
+    template.attr("data-article-id", article.id)
+
     $("#or-articles").append(template)
 }
 
@@ -317,6 +323,9 @@ function addCorrectionRow(correction, hasAuth) {
         action_template.find("#correction-delete").on("click", () => {deleteModalOpen(correction.article.id, correction.article.name, true)})
         template.append(action_template)
     }
+
+    template.attr("id", `c-${correction.article.id}`)
+    template.attr("data-article-id", correction.article.id)
 
     $('#co-articles').append(template)
 }
