@@ -35,8 +35,11 @@ thead {
   @apply md:table-header-group;
 }
 
+tr:not(.link-table tr) {
+  @apply flex flex-col h-auto w-full px-3 py-2 my-4 items-end shadow-2xl border-gray-500;
+} 
+
 tr {
-  @apply flex flex-col h-auto w-full px-3 py-2 my-4 items-end shadow-2xl border-gray-500 !important;
   @apply md:table-row md:h-10 md:shadow-none !important;
   @apply md:bg-transparent md:border-none;
 }
@@ -55,7 +58,7 @@ td {
   }
 
   .glass-btn {
-    @apply bg-white/5 hover:bg-white/20 border-white/20 inline-flex items-center justify-center h-12 px-3 py-2 transition-all border rounded-md;
+    @apply bg-white/5 hover:bg-white/20 border-white/20 text-center md:inline-flex md:items-center justify-center h-12 md:px-3 py-2 transition-all border rounded-md;
   }
 
   .glass-btn-sidebar {
@@ -112,6 +115,10 @@ td {
 
   .result-badge {
     @apply inline-block ml-2 text-green-600 bg-green-300/5 px-2 rounded-full border-green-300/10 border select-none transition-all;
+  }
+
+  .tiny-btn {
+    @apply border border-white px-5 mb-1 ml-1 hover:bg-white/10 transition-all rounded-md text-sm;
   }
 }
 

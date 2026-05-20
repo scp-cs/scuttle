@@ -599,18 +599,15 @@ video {
 }
 
 .glass-btn{
-  display: inline-flex;
   height: 3rem;
-  align-items: center;
   justify-content: center;
   border-radius: 0.375rem;
   border-width: 1px;
   border-color: rgb(255 255 255 / 0.2);
   background-color: rgb(255 255 255 / 0.05);
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  text-align: center;
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
@@ -618,6 +615,15 @@ video {
 
 .glass-btn:hover{
   background-color: rgb(255 255 255 / 0.2);
+}
+
+@media (min-width: 768px){
+  .glass-btn{
+    display: inline-flex;
+    align-items: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 }
 
 .glass-btn-sidebar{
@@ -851,18 +857,15 @@ video {
 }
 
 .btn-danger{
-  display: inline-flex;
   height: 3rem;
-  align-items: center;
   justify-content: center;
   border-radius: 0.375rem;
   border-width: 1px;
   border-color: rgb(255 255 255 / 0.2);
   background-color: rgb(255 255 255 / 0.05);
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+  text-align: center;
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 150ms;
@@ -870,6 +873,15 @@ video {
 
 .btn-danger:hover{
   background-color: rgb(255 255 255 / 0.2);
+}
+
+@media (min-width: 768px){
+  .btn-danger{
+    display: inline-flex;
+    align-items: center;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
 }
 
 .btn-danger{
@@ -899,8 +911,32 @@ video {
   transition-duration: 150ms;
 }
 
+.tiny-btn{
+  margin-bottom: 0.25rem;
+  margin-left: 0.25rem;
+  border-radius: 0.375rem;
+  border-width: 1px;
+  --tw-border-opacity: 1;
+  border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
+  padding-left: 1.25rem;
+  padding-right: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.tiny-btn:hover{
+  background-color: rgb(255 255 255 / 0.1);
+}
+
 .visible{
   visibility: visible;
+}
+
+.collapse{
+  visibility: collapse;
 }
 
 .static{
@@ -917,10 +953,6 @@ video {
 
 .relative{
   position: relative;
-}
-
-.sticky{
-  position: sticky;
 }
 
 .bottom-0{
@@ -1062,12 +1094,20 @@ video {
   margin-bottom: 1.5rem;
 }
 
+.ml-1{
+  margin-left: 0.25rem;
+}
+
 .ml-2{
   margin-left: 0.5rem;
 }
 
 .ml-3{
   margin-left: 0.75rem;
+}
+
+.ml-auto{
+  margin-left: auto;
 }
 
 .mr-2{
@@ -1144,6 +1184,10 @@ video {
 
 .hidden{
   display: none;
+}
+
+.h-1{
+  height: 0.25rem;
 }
 
 .h-10{
@@ -1425,6 +1469,10 @@ video {
   align-self: flex-start;
 }
 
+.self-end{
+  align-self: flex-end;
+}
+
 .self-center{
   align-self: center;
 }
@@ -1612,6 +1660,10 @@ video {
   border-color: rgb(255 255 255 / 0.3);
 }
 
+.border-white\/50{
+  border-color: rgb(255 255 255 / 0.5);
+}
+
 .border-yellow-400{
   --tw-border-opacity: 1;
   border-color: rgb(250 204 21 / var(--tw-border-opacity, 1));
@@ -1701,14 +1753,6 @@ video {
 
 .bg-white\/80{
   background-color: rgb(255 255 255 / 0.8);
-}
-
-.bg-black\/5{
-  background-color: rgb(0 0 0 / 0.05);
-}
-
-.bg-black\/20{
-  background-color: rgb(0 0 0 / 0.2);
 }
 
 .bg-opacity-20{
@@ -1927,6 +1971,11 @@ video {
   padding: 1.5rem;
 }
 
+.px-0{
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
 .px-10{
   padding-left: 2.5rem;
   padding-right: 2.5rem;
@@ -2058,6 +2107,10 @@ video {
 
 .font-bold{
   font-weight: 700;
+}
+
+.font-light{
+  font-weight: 300;
 }
 
 .font-semibold{
@@ -2223,6 +2276,14 @@ video {
   backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
 }
 
+.transition{
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-backdrop-filter;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
 .transition-all{
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -2287,23 +2348,23 @@ thead{
   }
 }
 
-tr{
-  margin-top: 1rem !important;
-  margin-bottom: 1rem !important;
-  display: flex !important;
-  height: auto !important;
-  width: 100% !important;
-  flex-direction: column !important;
-  align-items: flex-end !important;
-  --tw-border-opacity: 1 !important;
-  border-color: rgb(107 114 128 / var(--tw-border-opacity, 1)) !important;
-  padding-left: 0.75rem !important;
-  padding-right: 0.75rem !important;
-  padding-top: 0.5rem !important;
-  padding-bottom: 0.5rem !important;
-  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25) !important;
-  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color) !important;
-  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;
+tr:not(.link-table tr){
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  height: auto;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-end;
+  --tw-border-opacity: 1;
+  border-color: rgb(107 114 128 / var(--tw-border-opacity, 1));
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
 }
 
 @media (min-width: 768px){
@@ -2432,6 +2493,10 @@ td::before{
 .hover\:text-slate-50:hover{
   --tw-text-opacity: 1;
   color: rgb(248 250 252 / var(--tw-text-opacity, 1));
+}
+
+.hover\:text-white\/50:hover{
+  color: rgb(255 255 255 / 0.5);
 }
 
 .hover\:underline:hover{

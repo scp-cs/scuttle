@@ -218,7 +218,7 @@ def get_extra_links(aid: int):
         return result_error('Invalid article ID')
 
     links = ExtraLink.select().where(ExtraLink.article == aid)
-    return result_ok([link.to_dict() for link in links], extra_data={"mainLink": article.link})
+    return result_ok([link.to_dict() for link in links], extra_data={"mainLink": article.link, "title": article.name})
 
 @ApiController.post('/api/article/<int:aid>/links/remove')
 def remove_extra_link(aid: int):

@@ -1,12 +1,26 @@
-<template id="extra-link-tab-tpl">
-<div id="linktab" class="border-white border bg-black flex flex-col items-center justify-start absolute">
-
+<template id="extra-link-win-tpl">
+<div id="lt-window" class="border border-white bg-transparent backdrop-blur-md rounded-md px-0 top-0 absolute">
+  <div class="window-handle w-full h-8 border-b border-white/50 flex flex-row items-center px-2">
+    <span class="mr-2">
+      <p class="font-light text-sm lt-window-title"></p>
+    </span>
+    <span class="ml-auto">
+      <button>
+        <i class="close-btn self-end bi bi-x-lg text-sm hover:text-white/50 transition-all"></i>
+      </button>
+    </span>
+  </div>
+  <table class="ml-2 link-table w-full flex-1 text-sm mb-3">
+    <thead>
+    <tr>
+      <th>Odkaz</th>
+      <th>Poznámka</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody class="lt-tab-body">
+    </tbody>
+  </table>
+  <button class="tiny-btn">Přidat</button>
 </div>
-</template>
-
-<template id="extra-link-row-tpl">
-<tr class="h-12">
-    <td id="link" data-label="Odkaz:"></td>
-    <td id="desc" data-label="Popis"></td>
-</tr>
 </template>

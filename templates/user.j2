@@ -103,7 +103,7 @@
         <td data-label="Zapsáno:">{{tr.added.strftime('%d.%m.%Y %H:%M')}}</td>
         
         <td class="flex flex-col gap-2 md:table-row">
-           <a class="" onclick="deleteModalOpen('{{tr.id}}', '{{tr.name}}')"><i class="text-2xl transition-opacity bi bi-folder opacity-40 hover:opacity-100"></i></a>
+           <a class="" onclick="openExtraLinks(event, {{tr.id}})"><i class="text-2xl transition-opacity bi bi-folder opacity-40 hover:opacity-100"></i></a>
            {% if current_user.is_authenticated %}
             <a class="" href="{{url_for('ArticleController.edit_article', aid=tr.id)}}"><i class="text-2xl transition-opacity bi bi-pencil-square opacity-40 hover:opacity-100"></i></a>
             <a class="" onclick="deleteModalOpen('{{tr.id}}', '{{tr.name}}')"><i class="text-2xl transition-opacity bi bi-x-circle opacity-40 hover:opacity-100"></i></a>
