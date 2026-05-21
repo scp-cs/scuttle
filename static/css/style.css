@@ -1094,10 +1094,6 @@ video {
   margin-bottom: 1.5rem;
 }
 
-.ml-1{
-  margin-left: 0.25rem;
-}
-
 .ml-2{
   margin-left: 0.5rem;
 }
@@ -1148,6 +1144,10 @@ video {
 
 .mt-auto{
   margin-top: auto;
+}
+
+.box-border{
+  box-sizing: border-box;
 }
 
 .block{
@@ -1298,12 +1298,21 @@ video {
   min-width: 40em;
 }
 
+.min-w-max{
+  min-width: -moz-max-content;
+  min-width: max-content;
+}
+
 .flex-1{
   flex: 1 1 0%;
 }
 
 .flex-grow{
   flex-grow: 1;
+}
+
+.table-fixed{
+  table-layout: fixed;
 }
 
 .border-separate{
@@ -1317,6 +1326,17 @@ video {
 
 .border-spacing-y-0{
   --tw-border-spacing-y: 0px;
+  border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
+}
+
+.border-spacing-3{
+  --tw-border-spacing-x: 0.75rem;
+  --tw-border-spacing-y: 0.75rem;
+  border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
+}
+
+.border-spacing-x-3{
+  --tw-border-spacing-x: 0.75rem;
   border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
 }
 

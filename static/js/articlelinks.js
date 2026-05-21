@@ -15,11 +15,11 @@ async function openExtraLinks(event, article) {
                     <td>N/A</td>
                 </tr>`)
             
-            data.result.forEach(link => {
-            cloned.find(".lt-tab-body").append(`<tr>
+            data.result.forEach((link, idx) => {
+            cloned.find(".lt-tab-body").append(`<tr id="link-row-${article}-${idx}">
                     <td><a href="${link.link}" target="_blank" class="underline hover:text-white/50 transition-all">${link.title}</a></td>
                     <td>${link.desc ?? "N/A"}</td>
-                    <td><button class="tiny-btn">Odstranit</button>
+                    <td><button class="tiny-btn" onclick="deleteLink('${link.link}', ${article}, ${idx})">Odstranit</button>
                 </tr>`)
         });}
     )
@@ -35,4 +35,9 @@ async function openExtraLinks(event, article) {
 function closeWindow(id) {
     openWindows.delete(id)
     $(`#link-window-${id}`).draggable("destroy").fadeOut(150, function(){$(this).remove()})
+}
+
+function deleteLink(link, articleId, tabIndex) {
+    fetch(`/api/article/${articleId}/links/remove`, {method: "POST", body: JSON.stringify({link: link})});
+    $(`#link-window-${articleId} .lt-tab-body #link-row-${articleId}-${tabIndex}`).remove()
 }
