@@ -694,6 +694,26 @@ video {
   /* Used in text input forms*/
 }
 
+.small-input{
+  border-width: 1px;
+  border-color: rgb(255 255 255 / 0.5);
+  background-color: transparent;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+.small-input:focus-visible{
+  --tw-border-opacity: 1;
+  border-color: rgb(255 255 255 / var(--tw-border-opacity, 1));
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
 .progressbar{
   height: 1.5rem;
   width: 50%;
@@ -991,6 +1011,10 @@ video {
   z-index: 40;
 }
 
+.z-50{
+  z-index: 50;
+}
+
 .col-span-1{
   grid-column: span 1 / span 1;
 }
@@ -1146,10 +1170,6 @@ video {
   margin-top: auto;
 }
 
-.box-border{
-  box-sizing: border-box;
-}
-
 .block{
   display: block;
 }
@@ -1298,21 +1318,12 @@ video {
   min-width: 40em;
 }
 
-.min-w-max{
-  min-width: -moz-max-content;
-  min-width: max-content;
-}
-
 .flex-1{
   flex: 1 1 0%;
 }
 
 .flex-grow{
   flex-grow: 1;
-}
-
-.table-fixed{
-  table-layout: fixed;
 }
 
 .border-separate{
@@ -1324,19 +1335,13 @@ video {
   border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
 }
 
-.border-spacing-y-0{
-  --tw-border-spacing-y: 0px;
-  border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
-}
-
-.border-spacing-3{
-  --tw-border-spacing-x: 0.75rem;
-  --tw-border-spacing-y: 0.75rem;
-  border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
-}
-
 .border-spacing-x-3{
   --tw-border-spacing-x: 0.75rem;
+  border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
+}
+
+.border-spacing-y-0{
+  --tw-border-spacing-y: 0px;
   border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
 }
 
@@ -1689,6 +1694,11 @@ video {
   border-color: rgb(250 204 21 / var(--tw-border-opacity, 1));
 }
 
+.border-red-500{
+  --tw-border-opacity: 1;
+  border-color: rgb(239 68 68 / var(--tw-border-opacity, 1));
+}
+
 .border-opacity-20{
   --tw-border-opacity: 0.2;
 }
@@ -1989,11 +1999,6 @@ video {
 
 .p-6{
   padding: 1.5rem;
-}
-
-.px-0{
-  padding-left: 0px;
-  padding-right: 0px;
 }
 
 .px-10{

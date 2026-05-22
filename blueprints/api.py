@@ -1,5 +1,5 @@
-from logging import warning, info, error
-from flask import jsonify, request, Blueprint, flash, redirect, url_for, abort
+from logging import info
+from flask import jsonify, request, Blueprint, flash
 from flask_login import current_user, login_required
 from datetime import datetime
 import json
@@ -48,6 +48,12 @@ def search_article(query):
             'name': (a.corrector.display_name or a.corrector.nickname) if a.corrector else 'N/A'
         }
     } for a in results]
+
+# Only used to get the authentication status
+# or as a ping
+@ApiController.get('/api/nop')
+def api_no_operation():
+    return result_ok()
 
 @ApiController.get('/api/search/article_any')
 def search_any_article():

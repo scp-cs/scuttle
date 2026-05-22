@@ -1,0 +1,27 @@
+<div id="lt-add-window" class="border border-white bg-transparent backdrop-blur-md rounded-md top-0 absolute w-fit z-50 hidden">
+  <div class="window-handle w-full h-8 border-b border-white/50 flex flex-row px-2 items-center">
+    <span class="mr-2">
+      <p class="font-light text-sm elw-window-title">Přidat odkaz</p>
+    </span>
+    <span class="ml-auto">
+      <button onclick="closeLinkAddWindow()">
+        <i class="close-btn self-end bi bi-x-lg text-sm hover:text-white/50 transition-all"></i>
+      </button>
+    </span>
+  </div>
+  <div class="px-2 w-full border-b border-white/50 mb-1">
+  <span class="my-1 block">
+    <span class="font-light mr-2 text-sm">Název:</span>
+    <input type="text" name="linkname" id="elw-link-name" class="small-input w-full">
+  </span>
+  <span class="my-1 block">
+    <span class="font-light mr-2 text-sm">Odkaz:</span>
+    <input type="text" name="linkurl" id="elw-link-url" class="small-input w-full">
+  </span>
+  <span class="my-1 block">
+    <span class="font-light mr-2 text-sm">Poznámka:</span>
+    <input type="text" name="linkdesc" id="elw-link-desc" class="small-input w-full">
+  </span>
+  </div>
+  <button class="tiny-btn" id="elw-add-btn" onclick="addExtraLink()">Přidat</button>
+</div>
