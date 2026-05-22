@@ -195,6 +195,7 @@ def remove_correction(aid: int):
     return result_ok()
 
 @ApiController.post('/api/article/<int:aid>/links/add')
+@login_required
 def add_extra_link(aid: int):
     article = Article.get_or_none(Article.id == aid)
     if not article:
@@ -227,6 +228,7 @@ def get_extra_links(aid: int):
     return result_ok([link.to_dict() for link in links], extra_data={"mainLink": article.link, "title": article.name})
 
 @ApiController.post('/api/article/<int:aid>/links/remove')
+@login_required
 def remove_extra_link(aid: int):
     article = Article.get_or_none(Article.id == aid)
     if not article:
