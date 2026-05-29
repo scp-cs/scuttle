@@ -361,7 +361,8 @@ function searchArticle(query) {
     $('.usr-row').animate({opacity: 0}, 300)
     fetch('/api/search/article?' + new URLSearchParams({
         'q': query,
-        'u': uid
+        'u': uid,
+        'o': currentType === 'original' ? 1 : 0
     })).then(response => response.json()).then(r => {
         currentData = r
         setPageCount(Math.ceil(r.result.length/15))
@@ -394,7 +395,7 @@ async function setType(type) {
         case 'original':
             currentType = type
             console.log("Set type to Original")
-            $("#search-field").off("input", handleSearch)
+            $("#search-field").on("input", handleSearch)
             $(".active-table").replaceWith($('#original-table-partial').contents().clone(true, true).addClass('active-table'))
             showPage(0)
             break
@@ -402,6 +403,10 @@ async function setType(type) {
         default:
             console.error("Unknown type")
             break
+    }
+    if(isSearching) {
+        $("#search-field").val("")
+        searchArticle("")
     }
 }
 
