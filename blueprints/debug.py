@@ -2,7 +2,7 @@ from http import HTTPStatus
 from logging import critical, warning, error, info, debug
 from flask import Blueprint, redirect, url_for, current_app, request, render_template, send_from_directory, flash, abort, send_file
 from flask_login import login_required, current_user
-from db import Backup, User, Article
+from db import Backup, User, Article, ExtraLink
 from datetime import datetime
 import os
 import py7zr
@@ -191,13 +191,15 @@ def normalize_links():
             a.save()
             updated_count += 1
     flash(f"{updated_count} odkazů upraveno")
+    info(f"Normalized {updated_count} article links")
     return redirect(url_for('DebugToolsController.debug_index'))
 
 # TODO: Make this go both ways - mark pages that are present in DB but missing on site
 @DebugToolsController.route('/debug/compare_sitemap')
 @login_required
 def compare_sitemap():
-    ignored_prefixes = ['nav:', 'system:', 'fragment:', 'component:', 'theme:', 'search:', 'css:', 'legal:', 'info:', 'forum:']
+    info(f"Sitemap compare log requested by {current_user.nickname} (ID: {current_user.get_id()})")
+    ignored_prefixes = ['nav:', 'system:', 'component:', 'theme:', 'search:', 'css:', 'legal:', 'info:', 'forum:']
     wikis = [w['target_wiki'] for w in current_app.config['MONITORED_WIKIS']]
     links = []
 
@@ -228,7 +230,7 @@ def compare_sitemap():
             if slug.startswith(tuple(ignored_prefixes)):
                 sys_page_count += 1
                 continue
-            if not Article.get_or_none(Article.link ** f'%{slug}'):
+            if not Article.get_or_none(Article.link ** f'%{slug}') and not ExtraLink.get_or_none(ExtraLink.link ** f'%{slug}'):
                 missing_page_count += 1
                 logfile.write(f"MISSING - {link} ({slug})\n")
         logfile.write('\n' + 50*'=' + '\n')
@@ -236,4 +238,5 @@ def compare_sitemap():
         logfile.write(f"{sys_page_count} system pages ignored\n")
 
     flash("Protokol odeslán ke stažení")
+    info("Sitemap compare finished")
     return send_file(temp_file_path, download_name="sitemap_compare.txt", as_attachment=True)
