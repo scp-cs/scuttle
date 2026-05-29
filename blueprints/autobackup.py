@@ -184,6 +184,7 @@ def backup_status():
     if request.method == "GET":
         return jsonify([s.status for s in statuses.values()])
     try:
+        # Why is loads() called twice here? What was I even doing
         message = json.loads(json.loads(request.data))
         validate(message, status_message_schema)
         tag = message['tag']

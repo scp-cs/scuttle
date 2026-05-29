@@ -193,3 +193,6 @@ data/crypto
 # Temporary
 **/sqldiff.exe
 diff*.sql
+
+# idk
+*.idk

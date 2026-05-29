@@ -1,10 +1,15 @@
-from logging import warning, info, error
-from flask import jsonify, request, Blueprint, flash, redirect, url_for, abort
+from logging import info
+from flask import jsonify, request, Blueprint, flash
 from flask_login import current_user, login_required
 from datetime import datetime
+import json
+from http import HTTPStatus
 
-from db import Article, User, Frontpage, Correction
+from db import Article, User, Frontpage, Correction, ExtraLink
 from framework.roles import role_badge
+from framework.api.schemas.extra_link_schema import extra_link_schema, link_remove_schema
+from jsonschema import validate
+from jsonschema.exceptions import ValidationError
 
 ApiController = Blueprint('ApiController', __name__)
 
@@ -17,7 +22,7 @@ def result_ok(result = [], extra_data = {}):
         'hasAuth': current_user.is_authenticated
     } | extra_data)
 
-def result_error(error_message = "", status_code = 400):
+def result_error(error_message = "", status_code = HTTPStatus.BAD_REQUEST):
     return jsonify({
             'status': 'error',
             'result': [],
@@ -44,7 +49,13 @@ def search_article(query):
         }
     } for a in results]
 
-@ApiController.route('/api/search/article_any')
+# Only used to get the authentication status
+# or as a ping
+@ApiController.get('/api/nop')
+def api_no_operation():
+    return result_ok()
+
+@ApiController.get('/api/search/article_any')
 def search_any_article():
     query = request.args.get('q', None, str)
     if not query:
@@ -53,7 +64,7 @@ def search_any_article():
     results = search_article(query)
     return result_ok(results)
 
-@ApiController.route('/api/search/article')
+@ApiController.get('/api/search/article')
 def search_user_article():
     query = request.args.get('q', None, str)
     author = request.args.get('u', None, int)
@@ -79,7 +90,7 @@ def search_user_article():
                 }
             } for a in results])
 
-@ApiController.route('/api/search/user')
+@ApiController.get('/api/search/user')
 def search_user():
     query = request.args.get('q', None, str)
     if not query:
@@ -101,7 +112,7 @@ def search_user():
             'points': u.points} for u in user]
     return result_ok(results)
 
-@ApiController.route('/api/user/<int:uid>')
+@ApiController.get('/api/user/<int:uid>')
 def api_get_user(uid: int):
     user = User.get_or_none(User.id == uid)
     if not user: return result_error("User doesn't exist", 404)
@@ -109,7 +120,7 @@ def api_get_user(uid: int):
     results = user.to_dict()
     return result_ok(results)
 
-@ApiController.route('/api/user/<int:uid>/articles')
+@ApiController.get('/api/user/<int:uid>/articles')
 def api_get_articles(uid: int):
     user = User.get_or_none(User.id == uid)
     if not user: return result_error("User doesn't exist", 404)
@@ -146,7 +157,7 @@ def api_get_articles(uid: int):
 
     return result_ok([r.to_dict() for r in select], {"total": total})
 
-@ApiController.route('/api/user/<int:uid>/assign-correction', methods=['POST'])
+@ApiController.post('/api/user/<int:uid>/assign-correction')
 @login_required
 def assign_correction(uid: int):
     article_id = request.form.get('aid', None, int)
@@ -168,7 +179,7 @@ def assign_correction(uid: int):
     flash('Korekce zapsána')
     return result_ok()
 
-@ApiController.route('/api/article/<int:aid>/remove-correction', methods=["POST"])
+@ApiController.post('/api/article/<int:aid>/remove-correction')
 @login_required
 def remove_correction(aid: int):
 
@@ -181,4 +192,57 @@ def remove_correction(aid: int):
     article.corrector = None
     article.save()
     flash('Korekce odstraněna')
+    return result_ok()
+
+@ApiController.post('/api/article/<int:aid>/links/add')
+@login_required
+def add_extra_link(aid: int):
+    article = Article.get_or_none(Article.id == aid)
+    if not article:
+        flash('Neplatný článek')
+        return result_error('Invalid article ID')
+    
+    try:
+        data = json.loads(request.data)
+        validate(data, extra_link_schema)
+    except ValidationError:
+        return result_error("Schema validation failed for request data")
+    except json.JSONDecodeError as e:
+        return result_error(f"Request body is not valid JSON {str(e)}")
+
+    link_exists = ExtraLink.select().where((ExtraLink.article == article) & (ExtraLink.link == data['link'].strip()))
+    if link_exists.exists():
+        return result_error("Link already exists for this article", HTTPStatus.CONFLICT)
+    
+    ExtraLink.create(article=article, link=data['link'], title=data.get('name') or None, description=data.get('description'))
+    return result_ok()
+
+@ApiController.get('/api/article/<int:aid>/links')
+def get_extra_links(aid: int):
+    article = Article.get_or_none(Article.id == aid)
+    if not article:
+        flash('Neplatný článek')
+        return result_error('Invalid article ID')
+
+    links = ExtraLink.select().where(ExtraLink.article == aid)
+    return result_ok([link.to_dict() for link in links], extra_data={"mainLink": article.link, "title": article.name})
+
+@ApiController.post('/api/article/<int:aid>/links/remove')
+@login_required
+def remove_extra_link(aid: int):
+    article = Article.get_or_none(Article.id == aid)
+    if not article:
+        flash('Neplatný článek')
+        return result_error('Neplatný článek')
+    
+    try:
+        data = json.loads(request.data)
+        validate(data, link_remove_schema)
+    except (ValidationError, json.JSONDecodeError):
+        return result_error("Schema validation failed for request data")
+    
+    if data.get('link') is None:
+        return result_error("No link specified")
+
+    ExtraLink.delete().where(ExtraLink.link == data['link']).execute()
     return result_ok()

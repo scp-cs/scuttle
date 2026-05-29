@@ -28,6 +28,7 @@
             <td class="flex flex-col gap-2 md:table-row">
             <a href="{{ url_for('ArticleController.add_article', uid=ch.author.id, rss=1, l=ch.link, t=ch.title, u=ch.uuid) }}"><i class="text-2xl transition-opacity bi bi-file-earmark-plus opacity-40 hover:opacity-100"></i></a>
             <a href="{{ url_for('ArticleController.add_article', uid=ch.author.id, rss=1, l=ch.link, t=ch.title, u=ch.uuid, original=1) }}"><i class="text-2xl transition-opacity bi bi-file-earmark-text opacity-40 hover:opacity-100"></i></a>
+            <button onclick="modalOpen('{{ch.uuid}}', {{ch.author.id}}, '{{ch.link}}', '{{ch.title}}', true)"><i class="text-2xl transition-opacity bi bi-link-45deg opacity-40 hover:opacity-100"></i></button>
             <a href="{{ url_for('RssPageController.ignore_update', u=ch.uuid)}}" onclick="delete_confirm(this);"><i class="text-2xl transition-opacity bi bi-file-earmark-x opacity-40 hover:opacity-100"></i></a>
             </td>
         </tr>
@@ -53,7 +54,7 @@
             <td data-label="Přidáno">{{ ch.timestamp.strftime('%d.%m.%Y %H:%M') }}</td>
             <td data-label="Korektor"><a href="{{ url_for('UserController.user', uid=ch.author.id) }}" class="underline transition-all decoration-white/50 hover:text-blue-400">{{ ch.author.nickname }}</a></td>
             <td class="flex flex-row">
-                <button class="small-button" onclick="modalOpen('{{ch.uuid}}', {{ch.author.id}}, '{{ch.link}}', '{{ch.title}}')">Přiřadit článek</button>
+                <button class="small-button" onclick="modalOpen('{{ch.uuid}}', {{ch.author.id}}, '{{ch.link}}', '{{ch.title}}', false)">Přiřadit článek</button>
                 <a class="small-button" href="{{url_for('RssPageController.ignore_update', u=ch.uuid)}}">Ignorovat</a>
             </td>
         </tr>

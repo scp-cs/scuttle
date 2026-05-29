@@ -1,0 +1,28 @@
+<template id="extra-link-win-tpl">
+<div id="lt-window" class="border border-white bg-transparent backdrop-blur-md rounded-md top-0 absolute w-fit z-40">
+  <div class="window-handle w-full h-8 border-b border-white/50 flex flex-row px-2 items-center">
+    <span class="mr-2">
+      <p class="font-light text-sm lt-window-title"></p>
+    </span>
+    <span class="ml-auto">
+      <button>
+        <i class="close-btn self-end bi bi-x-lg text-sm hover:text-white/50 transition-all"></i>
+      </button>
+    </span>
+  </div>
+  <div class="px-2 w-full border-b border-white/50 mb-1">
+  <table class="link-table w-full flex-1 text-sm mb-3 border-separate border-spacing-x-3">
+    <thead>
+    <tr>
+      <th>Odkaz</th>
+      <th>Poznámka</th>
+      <th></th>
+    </tr>
+    </thead>
+    <tbody class="lt-tab-body">
+    </tbody>
+  </table>
+  </div>
+  <button class="tiny-btn elw-editor-open" onclick="openLinkAddWindow(event)">Přidat</button>
+</div>
+</template>

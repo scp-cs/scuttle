@@ -14,3 +14,19 @@
     </td>
 </tr>
 </template>
+
+<template id="search-result-link-template">
+<tr>
+    <td id="result-name"></td>
+    <td id="result-author"></td>
+    <td>
+        <form action="/article/assign-link" method="post">
+            {{ form.article_id(id='form-article') }}
+            {{ form.guid(id='form-guid') }}
+            {{ form.link(id='form-link') }}
+            {{ form.title(id='form-title') }}
+            {{ form.submit(id='form-submit', class='small-button')}}
+        </form>
+    </td>
+</tr>
+</template>

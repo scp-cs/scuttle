@@ -1,7 +1,7 @@
 # Builtins
 from datetime import datetime
 from http import HTTPStatus
-from logging import info, error
+from logging import info, error, warning
 
 # External
 from flask import Blueprint, flash, redirect, request, render_template, abort, url_for, session, current_app
@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 from forms import NewArticleForm, EditArticleForm, AssignCorrectionForm
 from framework.roles import get_role, RoleType
 from extensions import rss, webhook
-from db import User, Article
+from db import User, Article, ExtraLink
 
 ArticleController = Blueprint('ArticleController', __name__)
 
@@ -102,7 +102,11 @@ def edit_article(aid: int):
     article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)        
 
     if request.method == "GET":
-        fdata = {'title': article.name, 'words': article.words, 'bonus': article.bonus, 'link': article.link, 'translator': article.author.nickname}
+        fdata = {'title': article.name,
+                 'words': article.words,
+                 'bonus': article.bonus,
+                 'link': article.link,
+                 'translator': article.author.nickname}
         return render_template('edit_article.j2', form=EditArticleForm(data=fdata))
     
     form = EditArticleForm()
@@ -111,7 +115,7 @@ def edit_article(aid: int):
 
     point_diff = (form.words.data - article.words)/1000 + (form.bonus.data - article.bonus)
     if point_diff > 0:
-        check_role_and_notify(article.author.id, point_diff)
+        check_role_and_notify(article.author.id, point_diff, article.is_original)
 
     title = form.title.data.upper() if form.title.data.lower().startswith('scp') else form.title.data
 
@@ -125,7 +129,6 @@ def edit_article(aid: int):
 
     return redirect(url_for('UserController.user', uid=article.author.get_id()))
 
-# TODO: No idea if this isn't broken now
 @ArticleController.route('/article/assign-correction', methods=["POST"])
 @login_required
 def assign_correction():
@@ -148,6 +151,36 @@ def assign_correction():
     article.save()
 
     rss.remove_update(form.guid.data)
+    info(f"Correction by {corrector.nickname} (ID: {corrector.get_id()}) assigned to article {article.name} (ID: {article.id}) "
+          f"by {current_user.nickname} (ID: {current_user.get_id()})")
     flash('Článek aktualizován')
     return back_to_changes
 
+@ArticleController.route('/article/assign-link', methods=["POST"])
+@login_required
+def assign_link():
+    form = AssignCorrectionForm()
+    back_to_changes = redirect(url_for('RssPageController.rss_changes'))
+    article = Article.get_or_none(Article.id == form.article_id.data)
+    if not article:
+        return back_to_changes
+
+    existing = ExtraLink.select().where((ExtraLink.article == article) & (ExtraLink.link == form.link.data)).exists()
+    if existing:
+        warning(f"Link {form.link.data} for article {article.name} (ID: {article.id}) "
+            "already exists")
+        flash("Odkaz již pro tento článek existuje")
+        return back_to_changes
+
+    new_link = ExtraLink()
+    new_link.article = article
+    new_link.description = 'RSS'
+    new_link.link = form.link.data
+    new_link.title = form.title.data
+    new_link.save()
+
+    rss.remove_update(form.guid.data)
+    info(f"New link {new_link.link} (ID: {new_link.id}) assigned to article {article.name} (ID: {article.id}) "
+        f"by {current_user.nickname} (ID: {current_user.get_id()})")
+    flash('Článek aktualizován')
+    return back_to_changes

@@ -2,6 +2,8 @@
 
 {% block head %}
 <script src="{{url_for('static', filename='js/clipboard.min.js')}}"></script>
+<script src="{{url_for('static', filename='js/articlelinks.js')}}" defer></script>
+<script src="{{url_for('static', filename='js/user.js')}}" defer></script>
 {% endblock head %}
 
 {% block content %}
@@ -89,7 +91,7 @@
     </thead>
     <tbody id="tb-articles">
     {% for tr in translations %}
-    <tr id="t-{{tr.id}}" class="h-12">
+    <tr id="t-{{tr.id}}" class="h-12" data-article-id="{{tr.id}}">
         <td data-label="Název:">
             {% if tr.link %} <a class="hover:underline" target="_blank" href="{{tr.link}}">{{tr.name}}</a>
             {% else %} <span class="text-gray-500">{{tr.name}}</span>
@@ -99,12 +101,15 @@
         <td data-label="Bonus:">{{tr.bonus}}</td>
         <td data-label="Korektoval:">{% if tr.corrector %}<a class="underline" href="{{url_for('UserController.user', uid=tr.corrector.id)}}">{{tr.corrector.nickname}}</a>{% else %}N/A{% endif %}</td>
         <td data-label="Zapsáno:">{{tr.added.strftime('%d.%m.%Y %H:%M')}}</td>
-        {% if current_user.is_authenticated %}
+        
         <td class="flex flex-col gap-2 md:table-row">
+           <a class="" onclick="openExtraLinks(event, {{tr.id}})"><i class="text-2xl transition-opacity bi bi-folder opacity-40 hover:opacity-100"></i></a>
+           {% if current_user.is_authenticated %}
             <a class="" href="{{url_for('ArticleController.edit_article', aid=tr.id)}}"><i class="text-2xl transition-opacity bi bi-pencil-square opacity-40 hover:opacity-100"></i></a>
             <a class="" onclick="deleteModalOpen('{{tr.id}}', '{{tr.name}}')"><i class="text-2xl transition-opacity bi bi-x-circle opacity-40 hover:opacity-100"></i></a>
+            {% endif %}
         </td>
-        {% endif %}
+
     </tr>
     {% endfor %}
     </tbody>
@@ -130,9 +135,11 @@
 
 {% include 'partials/article_search_partials.j2'%}
 {% include 'partials/article_picker_modal.j2'%}
+{% include 'partials/extra_links_popup.j2'%}
+{% include 'partials/extra_link_form.j2'%}
 
 <script defer>
 $('#del-btn').click(() => {$('#del-btn').addClass('hidden'); $('#del-confirm').removeClass('hidden')})
 </script>
-<script src="{{url_for('static', filename='js/user.js')}}"></script>
+
 {% endblock content %}

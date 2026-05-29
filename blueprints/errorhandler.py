@@ -7,7 +7,7 @@ def e404(error):
     return render_template('errors/error.j2', errno=404, errtext="Not Found", errquote="Není žádná Antimemetická divize.", errlink="http://scp-cs.wikidot.com/your-last-first-day"), 404
 
 @ErrorPageController.app_errorhandler(401)
-def e403(error):
+def e401(error):
     return render_template('errors/error.j2', errno=401, errtext="Unauthorized", errquote="Okamžitě ukončete své spojení a zůstaňte na místě. Najdeme vás.", errlink="http://scp-cs.wikidot.com/scp-6630"), 401
 
 @ErrorPageController.app_errorhandler(500)
