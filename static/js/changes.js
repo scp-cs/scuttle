@@ -1,6 +1,8 @@
 const modWindow = document.getElementById('modal-window')
 const modOverlay = document.getElementById('modal-overlay')
 
+let currentPickerType = "correction";
+
 let currentCorrector;
 let currentGuid;
 let currentLink;
@@ -20,7 +22,8 @@ function modalClose() {
     $('#input-search').off('input', handleSearch)
 }
 
-function modalOpen(guid, correctorId, link, title) {
+function modalOpen(guid, correctorId, link, title, linkPicker) {
+    currentPickerType = linkPicker ? 'link' : 'correction';
     $("#modal-overlay").css("display", "flex").hide().fadeIn(200)
     setTimeout(() => $(window).on("click", clickOut), 100)
     $('#input-search').on('input', handleSearch).val("")
@@ -31,15 +34,17 @@ function modalOpen(guid, correctorId, link, title) {
 }
 
 function addTranslationRow(row) {
-    const template = $('#search-result-template')
+    const template = currentPickerType == 'correction' ? $('#search-result-template') : $('#search-result-link-template')
     let newRow = template.contents().clone(true, true)
-    newRow.find('#result-name').text(row.name)
-    newRow.find('#result-author').text(row.author.name)
-    newRow.find('#form-article').val(row.id)
-    newRow.find('#form-corrector').val(currentCorrector)
-    newRow.find('#form-guid').val(currentGuid)
-    newRow.find('#form-link').val(currentLink)
-    newRow.find('#form-title').val(currentTitle)
+    newRow.find('#result-name').text(row.name).attr("id", "")
+    newRow.find('#result-author').text(row.author.name).attr("id", "")
+    newRow.find('#form-article').val(row.id).attr("id", "")
+    if(currentPickerType === 'correction') {
+        newRow.find('#form-corrector').val(currentCorrector).attr("id", "")
+    }
+    newRow.find('#form-guid').val(currentGuid).attr("id", "")
+    newRow.find('#form-link').val(currentLink).attr("id", "")
+    newRow.find('#form-title').val(currentTitle).attr("id", "")
     $('#result-table-body').append(newRow)
 }
 
