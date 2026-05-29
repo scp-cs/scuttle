@@ -29,16 +29,26 @@ def result_error(error_message = "", status_code = HTTPStatus.BAD_REQUEST):
             'errorMessage': error_message
         }), status_code
 
-def search_article(query):
+def db_search_article(query: str, user_id: int | None = None, original: bool | None = None):
     title_param = f'%{query}%'
     link_param = f"%.wikidot.com/%{query}%"
-    results = Article.select().where(Article.name ** title_param | Article.link ** link_param).prefetch(User)
+
+    db_query = Article.select().where((Article.name ** title_param) | (Article.link ** link_param))
+    if user_id is not None:
+        db_query = db_query.where(Article.author == user_id)
+
+    if original is not None:
+        db_query = db_query.where(Article.is_original == original)
+
+    results = db_query.prefetch(User)
+
     return [{
         'id': a.id,
         'name': a.name,
         'link': a.link,
         'words': a.words,
         'added': a.added,
+        'original': a.is_original,
         'author': {
             'id': a.author.id,
             'name': a.author.display_name or a.author.nickname
@@ -55,40 +65,15 @@ def search_article(query):
 def api_no_operation():
     return result_ok()
 
-@ApiController.get('/api/search/article_any')
-def search_any_article():
-    query = request.args.get('q', None, str)
-    if not query:
-        return result_error("No query specified", 400)
-    
-    results = search_article(query)
-    return result_ok(results)
-
 @ApiController.get('/api/search/article')
-def search_user_article():
+def search_article():
     query = request.args.get('q', None, str)
     author = request.args.get('u', None, int)
-    if not query or not author:
+    original = request.args.get('o', None, bool)
+    if not query:
         return result_error("Parameters missing")
     
-    if author == -1:
-        return result_ok(search_article(query))
-    else:
-        title_param = f'%{query}%'
-        link_param = f"%.wikidot.com/%{query}%"
-        results = Article.select().where((Article.name ** title_param | Article.link ** link_param) & (Article.author == author)).prefetch(User)
-        return result_ok([{
-                'id': a.id,
-                'name': a.name,
-                'link': a.link,
-                'words': a.words,
-                'bonus': a.bonus,
-                'added': a.added,
-                'corrector': {
-                    'id': a.corrector.id if a.corrector else 0,
-                    'name': (a.corrector.display_name or a.corrector.nickname) if a.corrector else 'N/A'
-                }
-            } for a in results])
+    return result_ok(db_search_article(query, author, original))
 
 @ApiController.get('/api/search/user')
 def search_user():
