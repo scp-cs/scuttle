@@ -10,7 +10,7 @@
       </button>
     </span>
   </div>
-  <div class="px-2 w-full border-b border-white/50 mb-1">
+  <div class="px-2 w-full border-white/50 mb-1">
   <table class="link-table w-full flex-1 text-sm mb-3 border-separate border-spacing-x-3">
     <thead>
     <tr>
@@ -23,6 +23,8 @@
     </tbody>
   </table>
   </div>
+  {% if current_user.is_authenticated %}
   <button class="tiny-btn elw-editor-open" onclick="openLinkAddWindow(event)">Přidat</button>
+  {% endif %}
 </div>
 </template>

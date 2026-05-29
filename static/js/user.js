@@ -161,7 +161,6 @@ async function showPage(page) {
             .slice(page*15, (page+1)*15), currentData.hasAuth)
     } else {
         await fetchPage(page, currentSorting, currentType).then(data => {
-            debugger
             setPageCount(Math.ceil(data.total/15))
             addRows(data.result, data.hasAuth)
         })  
@@ -239,13 +238,20 @@ function addTranslationRow(article, hasAuth) {
     }
 
     template.find("#translation-timestamp").text(dateAsLocal(article.added))
-    
+
+    let action_template;
+
     if(hasAuth) {
-        let action_template = $("#translation-actions-template").contents().clone(true, true)
+        action_template = $("#translation-actions-template").contents().clone(true, true)
+        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
         action_template.find("#translation-edit").prop("href", `/article/${article.id}/edit`)
         action_template.find("#translation-delete").on("click", () => {deleteModalOpen(article.id, article.name)})
-        template.append(action_template)
+    } else {
+        action_template = $("#unauthorized-actions-template").contents().clone(true, true)
+        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
     }
+
+    template.append(action_template)
 
     template.attr('id', `t-${article.id}`)
     template.attr("data-article-id", article.id)
@@ -280,12 +286,19 @@ function addOriginalRow(article, hasAuth) {
 
     template.find("#article-timestamp").text(dateAsLocal(article.added))
     
+    let action_template;
+
     if(hasAuth) {
-        let action_template = $("#translation-actions-template").contents().clone(true, true)
+        action_template = $("#translation-actions-template").contents().clone(true, true)
+        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
         action_template.find("#translation-edit").prop("href", `/article/${article.id}/edit`)
         action_template.find("#translation-delete").on("click", () => {deleteModalOpen(article.id, article.name)})
-        template.append(action_template)
+    } else {
+        action_template = $("#unauthorized-actions-template").contents().clone(true, true)
+        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
     }
+
+    template.append(action_template)
 
     template.attr("id", `o-${article.id}`)
     template.attr("data-article-id", article.id)
@@ -401,10 +414,7 @@ function handleSearch(e) {
     }
 }
 
-$("#search-field").on("input", handleSearch)
-setSelectedPage(0)
-setSelectedSorter('latest')
-setSelectedType('translation')
+
 
 // ===== ARTICLE PICKER FUNCTIONS =====
 
@@ -440,7 +450,6 @@ function unassignCorrection(articleId) {
 }
 
 function searchPickerArticle(query) {
-    console.log(`search for ${query}`)
     $('#result-table-body').empty()
     fetch('/api/search/article?' + new URLSearchParams({
         'q': query,
@@ -455,3 +464,7 @@ function handlePickerSearch(e) {
     }
 }
 
+$("#search-field").on("input", handleSearch)
+setSelectedPage(0)
+setSelectedSorter('latest')
+setSelectedType('translation')
