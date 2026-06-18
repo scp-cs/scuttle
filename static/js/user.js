@@ -457,8 +457,7 @@ function unassignCorrection(articleId) {
 function searchPickerArticle(query) {
     $('#result-table-body').empty()
     fetch('/api/search/article?' + new URLSearchParams({
-        'q': query,
-        'u': -1
+        'q': query
     })).then(response => response.json()).then(r => r.result.slice(0, 10).forEach(result => addPickerItem(result)))
 }
 
