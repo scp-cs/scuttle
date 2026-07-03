@@ -251,4 +251,5 @@ if __name__ == '__main__':
     else:
         fix_proxy()
         info("Init complete. Starting WSGI server now.")
+        # That IS in fact a lot of threads, thank you for noticing
         serve(app, threads=64)
