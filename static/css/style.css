@@ -1003,14 +1003,6 @@ video {
   top: 0.75rem;
 }
 
-.top-10{
-  top: 2.5rem;
-}
-
-.top-1{
-  top: 0.25rem;
-}
-
 .top-4{
   top: 1rem;
 }
@@ -1362,6 +1354,11 @@ video {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
 
+.rotate-45{
+  --tw-rotate: 45deg;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
 .transform{
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
 }
@@ -1424,17 +1421,6 @@ video {
 
 .animate-timeout{
   animation: timeout 5s linear;
-}
-
-@keyframes ping{
-  75%, 100%{
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-.animate-ping{
-  animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
 .cursor-pointer{
@@ -2165,6 +2151,10 @@ video {
   line-height: 1rem;
 }
 
+.text-\[10rem\]{
+  font-size: 10rem;
+}
+
 .font-bold{
   font-weight: 700;
 }
@@ -2676,10 +2666,6 @@ td::before{
 
   .md\:bg-white\/5{
     background-color: rgb(255 255 255 / 0.05);
-  }
-
-  .md\:p-10{
-    padding: 2.5rem;
   }
 
   .md\:p-12{

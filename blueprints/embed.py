@@ -47,6 +47,10 @@ def user_badge(uid: int):
     last = user.articles.where(Article.is_original == (embed_type != EmbedType.TRANSLATOR)).order_by(Article.added.desc()).first()
     return render_template(get_template(embed_type, safe_theme), user=user, stats=stats, last=last)
 
+@EmbedController.route('/user/{$user}/embed', methods=["GET"])
+def wikidot_component_override():
+    return render_template('embeds/static_preview.j2')
+
 @EmbedController.route('/user/<int:uid>/preview_embed')
 def user_badge_preview(uid: int):
     return render_template('embed_preview.j2', uid=uid, writer_themes=json.dumps(writer_themes_installed), translator_themes=json.dumps(translator_themes_installed))
