@@ -20,6 +20,7 @@ def render_template_file(file: str | bytes | os.PathLike, **context: Any) -> str
         return None
     except BuildError as e:
         error(f"Template render failed ({str(e)}) (Invalid url_for??)")
+        return None
     except Exception as e:
-        error(f"Failed to open template file {file}: {str(e)}")
+        error(f"Failed to open template file {file!r}: {str(e)}")
         return None
