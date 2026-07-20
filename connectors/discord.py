@@ -166,13 +166,6 @@ class DiscordWebhook():
             data = {"content": f'<@{self.notify}> {message}'}
         else:
             data = {"content": message}
-        '''if files:
-            data['attachments'] = []
-            for idx, file in enumerate(files):
-                data['attachments'] += [{
-                    'id': idx,
-                    'filename': file[0]
-                }]'''
         info('Sending webhook')
         try:
             if not files:
