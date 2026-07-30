@@ -156,6 +156,17 @@ class Backup(BaseModel):
     sha1 = CharField(48, null=True, unique=True)
     is_finished = BooleanField(default=False)
 
+    def to_dict(self) -> dict:
+        return {
+            'id': self.id,
+            'date': self.date,
+            'article_count': self.article_count,
+            'author': 'SYSTEM' if not self.author else self.author.to_dict(),
+            'fingerprint': self.fingerprint,
+            'sha1': self.sha1,
+            'is_finished': self.is_finished
+        }
+
 class Note(BaseModel):
     id = AutoField()
     content = TextField()
