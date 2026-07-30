@@ -123,10 +123,13 @@ def finish_backup():
     backup_done_message += f"Kontrolní součet archivu je {hash}\n\n"
     backup_done_message += "Administrace Záznamů a Informační Bezpečnosti vám přeje hezký den!```" # Be polite :3
 
+    # TODO: The fingerprint is not getting saved
+
     # Send it
     webhook.send_text(backup_done_message)
     statuses.clear()
-    Backup.update(is_finished=True).where(Backup.is_finished == False).execute()
+    Backup.update(is_finished=True, 
+                  article_count=status.finished_articles).where(Backup.is_finished == False).execute()
 
 @AutobackupController.route('/backups', methods=["GET"])
 @login_required
