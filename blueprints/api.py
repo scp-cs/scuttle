@@ -1,12 +1,14 @@
 from logging import info
-from flask import jsonify, request, Blueprint, flash
+from flask import jsonify, request, Blueprint, flash, current_app, send_file
 from flask_login import current_user, login_required
 from datetime import datetime
 import json
 from http import HTTPStatus
 from functools import wraps
+from peewee import DoesNotExist
+import os
 
-from db import Article, User, Frontpage, Correction, ExtraLink
+from db import Article, User, Frontpage, Correction, ExtraLink, ApiKey, Backup
 from framework.roles import role_badge
 from framework.api.schemas.extra_link_schema import extra_link_schema, link_remove_schema
 from jsonschema import validate
@@ -246,3 +248,35 @@ def remove_extra_link(aid: int):
 
     ExtraLink.delete().where(ExtraLink.link == data['link']).execute()
     return result_ok()
+
+@ApiController.get('/api/backup/list')
+@api_auth_required
+def list_backups():
+    json = []
+    for backup in Backup.select():
+        json.append(backup.to_dict())
+    return result_ok(json)
+
+@ApiController.get('/api/backup/<int:backup_id>/archive')
+@api_auth_required
+def get_backup_archive(backup_id: int):
+    try:
+        backup = Backup.get_by_id(backup_id)
+    except DoesNotExist:
+        return result_error("The backup ID does not exist", HTTPStatus.NOT_FOUND)
+    archive_path = current_app.config['BACKUP']['BACKUP_ARCHIVE_PATH']
+    backup_path = os.path.join(archive_path, f'{backup.sha1}.7z')
+    if not os.path.exists(backup_path): return result_error("File does not exist", HTTPStatus.NOT_FOUND)
+    return send_file(backup_path) 
+
+@ApiController.get('/api/backup/<int:backup_id>/signature')
+@api_auth_required
+def get_backup_signature(backup_id: int):
+    try:
+        backup = Backup.get_by_id(backup_id)
+    except DoesNotExist:
+        return result_error("The backup ID does not exist", HTTPStatus.NOT_FOUND)
+    archive_path = current_app.config['BACKUP']['BACKUP_ARCHIVE_PATH']
+    backup_path = os.path.join(archive_path, f'{backup.sha1}.7z.asc')
+    if not os.path.exists(backup_path): return result_error("File does not exist", HTTPStatus.NOT_FOUND)
+    return send_file(backup_path) 
