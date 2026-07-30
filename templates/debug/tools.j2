@@ -43,6 +43,10 @@
             <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.raise_critical_error')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Simulovat kritickou chybu</p></a>
             <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.raise_unhandled')}}"><i class="mr-2 text-lg bi bi-exclamation-lg"></i><p class="select-none">Debugger</p></a>
         </div>
+        <div class="button-group">
+            <h1 class="text-lg font-bold">Ostatní</h1>
+            <a class="glass-btn w-fit" href="{{url_for('DebugToolsController.api_settings')}}"><i class="mr-2 text-lg bi bi-code-slash"></i><p class="select-none">Nastavení API</p></a>
+        </div>
     </div>
 </div>
 {% endblock content %}

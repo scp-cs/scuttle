@@ -4,6 +4,7 @@ from flask_login import current_user, login_required
 from datetime import datetime
 import json
 from http import HTTPStatus
+from functools import wraps
 
 from db import Article, User, Frontpage, Correction, ExtraLink
 from framework.roles import role_badge
@@ -14,6 +15,20 @@ from jsonschema.exceptions import ValidationError
 ApiController = Blueprint('ApiController', __name__)
 
 PAGE_ITEMS = 15
+
+def api_auth_required(func):
+    @wraps(func)
+    def wrapped(*args, **kwargs):
+        if not request.authorization:
+            return result_error("This action requires authorization", HTTPStatus.UNAUTHORIZED)
+        if request.authorization.type.lower() != 'bearer':
+            return result_error("Invalid authorization type for API")
+        if not (key := ApiKey.get_or_none(ApiKey.key == request.authorization.token)):
+            return result_error("Invalid API key", HTTPStatus.UNAUTHORIZED)
+        if key.expires is not None and key.expires < datetime.now():
+            return result_error("The API key has expired", HTTPStatus.UNAUTHORIZED)
+        return func(*args, **kwargs)
+    return wrapped
 
 def result_ok(result = [], extra_data = {}):
     return jsonify({
