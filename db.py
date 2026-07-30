@@ -240,9 +240,15 @@ class Frontpage(ViewModel):
     correction_count = IntegerField()
     original_count = IntegerField()
 
+class ApiKey(BaseModel):
+    key = CharField(64)
+    expires = DateTimeField(null=True)
+    scope = IntegerField()
+    generated_by = ForeignKeyField(User, field='id', backref='apikeys')
+    generated_at = DateTimeField(default=datetime.datetime.now)
+    note = TextField(null=True)
 
-
-models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki, ExtraLink]
+models = [User, Article, Backup, Note, UserType, UserHasType, Backup, Wiki, WikiCommaConfig, BackupHasWiki, ExtraLink, ApiKey]
 
 def last_update() -> datetime.datetime:
     return Article.select(fn.MAX(Article.added)).scalar() or datetime.datetime(year=1990, month=1, day=1)
