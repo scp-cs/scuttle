@@ -30,11 +30,15 @@ def login():
     user = User.get_or_none(User.nickname == form.username.data)
     if user is None or not pw_check(form.password.data, user.password):
         flash('Nesprávné uživatelské jméno nebo heslo')
+        info(f'Rejected login for nonexistent user "{form.username.data}"')
         return redirect(url_for('AuthController.login'))
 
     if user.temp_pw:
+        info(f"First login for user {user.nickname} (ID: {user.get_id()}), prompting password change")
         session['PRE_LOGIN_UID'] = user.id
         return redirect(url_for('AuthController.pw_change'))
+
+    info(f"User {user.nickname} (ID: {user.get_id()}) logged in using basic authentication")
     login_user(user)
     referrer = session.get('login_next', None)
 
@@ -45,6 +49,7 @@ def login():
 @AuthController.route('/user/logout')
 @login_required
 def logout():
+    info(f"User {current_user.nickname} (ID: {current_user.get_id()}) logged out")
     logout_user()
     flash('Uživatel odhlášen')
     return redirect(url_for('LeaderboardController.index'))
