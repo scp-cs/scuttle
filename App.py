@@ -93,7 +93,7 @@ def extensions_init() -> None:
     login_manager.session_protection = "basic"
     login_manager.login_view = "AuthController.login"
     login_manager.login_message = u"Pro zobrazení této stránky se přihlaste"
-    login_manager.user_loader(lambda uid: User.get_by_id(uid))
+    login_manager.user_loader(lambda uid: User.get_or_none(User.id == uid))
     login_manager.init_app(app)
 
     # Checking if we can enable Discord Login
