@@ -213,7 +213,6 @@ function setSorting(order) {
 
 function addTranslationRow(article, hasAuth) {
     let template = $("#translation-row-template").contents().clone(true, true)
-
     if(article.link) {
         let link = $("<a>", {
             class: "hover:underline",
@@ -223,6 +222,13 @@ function addTranslationRow(article, hasAuth) {
         template.find("#translation-name").append(link)
     } else {
         template.find("#translation-name").addClass("text-gray-500").text(article.name)
+    }
+    if(article.excluded) {
+        const indicator = $("<i>", {
+            class: "bi bi-database-slash opacity-30 text-lg mr-2",
+            title: "Tento článek se nepočítá do statistik"
+        })
+        template.find("#translation-name").prepend(indicator)
     }
     template.find('#translation-bonus').text(article.bonus)
     template.find('#translation-words').text(article.words)
@@ -271,6 +277,13 @@ function addOriginalRow(article, hasAuth) {
         template.find("#article-name").append(link)
     } else {
         template.find("#article-name").addClass("text-gray-500").text(article.name)
+    }
+    if(article.excluded) {
+        const indicator = $("<i>", {
+            class: "bi bi-database-slash opacity-30 text-lg mr-2",
+            title: "Tento článek se nepočítá do statistik"
+        })
+        template.find("#article-name").prepend(indicator)
     }
     template.find('#article-words').text(article.words)
     

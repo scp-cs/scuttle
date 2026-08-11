@@ -66,6 +66,7 @@ def db_search_article(query: str, user_id: int | None = None, original: bool | N
         'words': a.words,
         'added': a.added,
         'original': a.is_original,
+        'excluded': a.excluded,
         'author': {
             'id': a.author.id,
             'name': a.author.display_name or a.author.nickname
