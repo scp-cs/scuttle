@@ -1,7 +1,7 @@
 from typing import Any
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField, IntegerField, BooleanField, ValidationError, HiddenField
-from wtforms.validators import EqualTo, Length, DataRequired, url, NumberRange
+from wtforms.validators import EqualTo, Length, url, NumberRange, InputRequired
 from flask import flash
 
 class FlaskFormEx(FlaskForm):
@@ -27,8 +27,8 @@ class DiscordID():
             raise ValidationError('Discord ID může obsahovat pouze číslice')
 
 class LoginForm(FlaskFormEx):
-    username = StringField('Uživatelské Jméno', validators=[DataRequired()])
-    password = PasswordField('Heslo', validators=[DataRequired()])
+    username = StringField('Uživatelské Jméno', validators=[InputRequired()])
+    password = PasswordField('Heslo', validators=[InputRequired()])
     submit = SubmitField('Přihlásit')
 
 class PasswordChangeForm(FlaskFormEx):
@@ -37,32 +37,33 @@ class PasswordChangeForm(FlaskFormEx):
     submit = SubmitField('Změnit heslo')
 
 class NewArticleForm(FlaskFormEx):
-    title = StringField('Název', validators=[DataRequired(message="Zadejte název článku")])
+    title = StringField('Název', validators=[InputRequired(message="Zadejte název článku")])
     translator = StringField('Překladatel')
-    words = IntegerField('Počet slov', validators=[DataRequired(message="Zadejte počet slov")])
+    words = IntegerField('Počet slov', validators=[InputRequired(message="Zadejte počet slov")])
     bonus = IntegerField('Bonusové body', default=0)
     link = StringField('Odkaz')
+    excluded = BooleanField('Vyloučit z počítání bodů', default=False)
     submit = SubmitField('Odeslat')
 
 class EditArticleForm(NewArticleForm):
     pass
 
 class NewUserForm(FlaskFormEx):
-    nickname = StringField('Přezdívka', validators=[DataRequired()])
-    wikidot = StringField('Wikidot ID', validators=[DataRequired()])
+    nickname = StringField('Přezdívka', validators=[InputRequired()])
+    wikidot = StringField('Wikidot ID', validators=[InputRequired()])
     discord = StringField('Discord ID', validators=[DiscordID()])
-    can_login = BooleanField('Vygenerovat heslo')
+    can_login = BooleanField('Administrátor')
     submit = SubmitField('Přidat')
 
 class EditUserForm(NewUserForm):
-    nickname = StringField('Přezdívka', validators=[DataRequired()])
-    wikidot = StringField('Wikidot ID', validators=[DataRequired()])
+    nickname = StringField('Přezdívka', validators=[InputRequired()])
+    wikidot = StringField('Wikidot ID', validators=[InputRequired()])
     discord = StringField('Discord ID', validators=[DiscordID()])
     submit = SubmitField('Uložit')
 
 class PasswordChangeForm(FlaskFormEx):
-    pw = PasswordField('Heslo', validators=[DataRequired()])
-    pw_confirm = PasswordField('Potvrzení hesla', validators=[DataRequired(), EqualTo('pw', message="Hesla se musí shodovat")])
+    pw = PasswordField('Heslo', validators=[InputRequired()])
+    pw_confirm = PasswordField('Potvrzení hesla', validators=[InputRequired(), EqualTo('pw', message="Hesla se musí shodovat")])
     submit = SubmitField('Potvrdit')
 
 class AssignCorrectionForm(FlaskFormEx):
