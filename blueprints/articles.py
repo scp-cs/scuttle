@@ -106,7 +106,8 @@ def edit_article(aid: int):
                  'words': article.words,
                  'bonus': article.bonus,
                  'link': article.link,
-                 'translator': article.author.nickname}
+                 'translator': article.author.nickname,
+                 'excluded': article.excluded}
         return render_template('edit_article.j2', form=EditArticleForm(data=fdata))
     
     form = EditArticleForm()
