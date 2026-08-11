@@ -19,13 +19,17 @@ from extensions import sched, webhook, portainer
 
 DebugToolsController = Blueprint('DebugToolsController', __name__)
 
-@DebugToolsController.before_request
-def log_debug_access():
-    if not current_app.config['DEBUG'] and not current_user.is_anonymous:
-        info(f'Debug endpoint {request.full_path} accessed by {current_user.nickname} (ID: {current_user.get_id()})')
+def log_access(route):
+    @wraps(route)
+    def wrapped(*args, **kwargs):
+        if not current_app.config['DEBUG']: 
+            info(f'Debug endpoint {request.full_path} accessed by {current_user.nickname} (ID: {current_user.get_id()})')
+        return route(*args, **kwargs)
+    return wrapped
 
 @DebugToolsController.route('/debug/nickupdate')
 @login_required
+@log_access
 def nickupdate():
     sched.run_job('Fetch nicknames')
     flash("Aktualizace spuštěna na pozadí!")
@@ -33,6 +37,7 @@ def nickupdate():
 
 @DebugToolsController.route('/debug/avupdate')
 @login_required
+@log_access
 def avdownload():
     sched.run_job('Download avatars')
     flash("Aktualizace spuštěna na pozadí!")
@@ -40,6 +45,7 @@ def avdownload():
 
 @DebugToolsController.route('/debug/invalidate_avatar_cache')
 @login_required
+@log_access
 def av_cache_invalidate():
     User.update(avatar_hash=None).execute()
     flash("Cache zneplatněna, příští aktualizace stáhne všechny avatary")
@@ -59,6 +65,7 @@ def debug_index():
 
 @DebugToolsController.route('/debug/test_webhook')
 @login_required
+@log_access
 def webhook_testing():
     try:
         webhook.send_text('TEST MESSAGE', files=[('hi.txt', 'hewwo')])
@@ -70,6 +77,7 @@ def webhook_testing():
     
 @DebugToolsController.route('/debug/db/export')
 @login_required
+@log_access
 def export_database():
     download_name=datetime.strftime(datetime.now(), 'scp_%d_%m_%Y.db')
     flash("Databáze exportována!")
@@ -77,6 +85,7 @@ def export_database():
 
 @DebugToolsController.route('/debug/backup/test_portainer')
 @login_required
+@log_access
 def test_portainer_login():
     try:
         portainer.login()
@@ -87,6 +96,7 @@ def test_portainer_login():
 
 @DebugToolsController.route('/debug/backup/kill_container')
 @login_required
+@log_access
 def kill_wikicomma_container():
     if not portainer.is_authenticated():
         portainer.login()
@@ -99,6 +109,7 @@ def kill_wikicomma_container():
 
 @DebugToolsController.route('/debug/backup/start_container')
 @login_required
+@log_access
 def start_wikicomma_container():
     if not portainer.is_authenticated():
         portainer.login()
@@ -123,6 +134,7 @@ def raise_unhandled():
 
 @DebugToolsController.route('/debug/export_pubkey')
 @login_required
+@log_access
 def export_pubkey():
     info(f"Public key exported by user {current_user.nickname}")
     return send_from_directory(os.path.join(os.getcwd(), 'data', 'crypto'), 'scuttle.pub.asc', as_attachment=True)
@@ -135,6 +147,7 @@ def raise_critical_error():
 
 @DebugToolsController.route('/debug/backup/forceend')
 @login_required
+@log_access
 def force_end_backup():
     Backup.update(is_finished=True).execute()
     flash("Záloha ukončena")
@@ -142,6 +155,7 @@ def force_end_backup():
 
 @DebugToolsController.route('/debug/backup/snapshot_all')
 @login_required
+@log_access
 def make_all_snapshots():
     snapshot_all()
     flash("Snímky vytvořeny")
@@ -149,6 +163,7 @@ def make_all_snapshots():
 
 @DebugToolsController.route("/debug/extract_snapshots")
 @login_required
+@log_access
 def extract_snapshots():
     last_backup = Backup.select().order_by(Backup.date.desc()).first()
     backup_filename = str(last_backup.sha1) + '.7z'
@@ -172,6 +187,7 @@ def extract_snapshots():
 
 @DebugToolsController.route('/debug/normalize_links')
 @login_required
+@log_access
 def normalize_links():
     # Removes trailing newlines from all links in the database
     # And sets the URL scheme to HTTP
@@ -198,6 +214,7 @@ def normalize_links():
 # TODO: Make this go both ways - mark pages that are present in DB but missing on site
 @DebugToolsController.route('/debug/compare_sitemap')
 @login_required
+@log_access
 def compare_sitemap():
     info(f"Sitemap compare log requested by {current_user.nickname} (ID: {current_user.get_id()})")
     ignored_prefixes = ['nav:', 'system:', 'component:', 'theme:', 'search:', 'css:', 'legal:', 'info:', 'forum:']
