@@ -13,6 +13,7 @@ from forms import NewArticleForm, EditArticleForm, AssignCorrectionForm
 from framework.roles import get_role, RoleType
 from extensions import rss, webhook
 from db import User, Article, ExtraLink
+from utils import is_mainlist_scp
 
 ArticleController = Blueprint('ArticleController', __name__)
 
@@ -64,7 +65,7 @@ def add_article(uid):
     if not form.validate_and_flash():
         return redirect(url_for('ArticleController.add_article', uid=uid))
 
-    title = form.title.data.upper() if form.title.data.lower().startswith('scp') else form.title.data # Capitalize SCP
+    title = form.title.data.upper() if is_mainlist_scp(form.title.data) else form.title.data # Capitalize SCP
     is_original = bool(request.args.get('original', False))
 
     if Article.select().where(Article.name == title).exists():
@@ -118,7 +119,8 @@ def edit_article(aid: int):
     if point_diff > 0 and not form.excluded.data:
         check_role_and_notify(article.author.id, point_diff, article.is_original)
 
-    title = form.title.data.upper() if form.title.data.lower().startswith('scp') else form.title.data
+    # TODO:
+    title = form.title.data.upper() if is_mainlist_scp(form.title.data) else form.title.data
 
     article.name = title
     article.words = form.words.data

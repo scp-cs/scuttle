@@ -1,6 +1,7 @@
 from os.path import exists
 import os
 import itertools
+import re as regex
 from json import load, dump, JSONDecodeError
 from secrets import token_hex
 from connectors.discord import DiscordWebhook
@@ -8,6 +9,8 @@ from datetime import datetime
 import traceback
 
 import logging
+
+SCP_REGEX = regex.compile(r"SCP-\d+(-\S+)?", regex.IGNORECASE)
 
 DEFAULT_CONFIG = {
     "SECRET_KEY": token_hex(24),
@@ -64,6 +67,9 @@ def count_files_rec(dir: str | os.PathLike) -> int:
     # itertools.chain gives us a generator again because this language is silly
     # empty it into a list again and return the length
     return len(list(flat_list))
+
+def is_mainlist_scp(name: str):
+    return bool(SCP_REGEX.fullmatch(name))
 
 class DiscordErrorHandler(logging.Handler):
     def __init__(self):
