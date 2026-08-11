@@ -4,6 +4,7 @@ from flask import Blueprint, redirect, url_for, current_app, request, render_tem
 from flask_login import login_required, current_user
 from db import Backup, User, Article, ExtraLink, ApiKey
 from datetime import datetime
+from functools import wraps
 import os
 import py7zr
 import io
