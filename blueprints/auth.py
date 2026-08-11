@@ -42,7 +42,8 @@ def login():
     login_user(user)
     referrer = session.get('login_next', None)
 
-    del session['login_next']
+    if 'login_next' in session:
+        del session['login_next']
     return redirect(referrer or url_for('LeaderboardController.index'))
 
 
