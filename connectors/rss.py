@@ -111,17 +111,24 @@ class RSSMonitor:
     @staticmethod
     def find_link(link: str) -> Optional[Article]:
         article = Article.get_or_none(Article.link == link)
-        if not article:
-            if link.startswith("https"):
-                link = link.replace("https", "http", 1)
-            else:
-                link = link.replace("http", "https", 1)
-            article = Article.get_or_none(Article.link == link)
+        if article:
+            return article
+        
+        if link.startswith("https"):
+            link = link.replace("https", "http", 1)
+        else:
+            link = link.replace("http", "https", 1)
+
+        article = Article.get_or_none(Article.link == link)
         return article
         
     @staticmethod
     def get_rss_update_title(update: dict) -> str:
-        return r_title.search(update['title']).group(1)
+        regex_result = r_title.search(update['title'])
+        if not regex_result:
+            warning(f"Could not find article title in string \"{update['title']}\"")
+            return ""
+        return regex_result.group(1)
 
     @staticmethod
     def get_rss_update_timestamp(update: dict) -> datetime:
@@ -148,13 +155,15 @@ class RSSMonitor:
             return False
         debug(f'Check {title} with ts {timestamp}, last db update was {last_update()}')
         
-        if timestamp+TIMEZONE_UTC_OFFSET > last_update():
-            if RSSMonitor.find_link(link):
-                info(f'Ignoring {title} in RSS feed (added manually)')
-                return False
-            self.__updates.append(RSSUpdate(timestamp+TIMEZONE_UTC_OFFSET, link, title, author, uuid4(), RSSUpdateType.RSS_NEWPAGE))
-            return True
-        return False
+        if timestamp+TIMEZONE_UTC_OFFSET < last_update():
+            return False
+        
+        if RSSMonitor.find_link(link):
+            info(f'Ignoring {title} in RSS feed (added manually)')
+            return False
+        
+        self.__updates.append(RSSUpdate(timestamp+TIMEZONE_UTC_OFFSET, link, title, author, uuid4(), RSSUpdateType.RSS_NEWPAGE))
+        return True
 
     def _process_correction(self, update) -> bool:
         real_title = update["title"].split("\"")[1]
@@ -164,16 +173,19 @@ class RSSMonitor:
             debug(f"RSS Assign failed - RSS author is {author}, RSS title is {real_title}")
             self.__webhook.send_text(f'Korekci pro {real_title} nelze přiřadit k autorovi. Uživatel neexistuje.')
             warning(f"Correction for {real_title} cannot be assigned to a user")
-        else:
-            translation = RSSMonitor.find_link(update['link'])
-            if not translation:
-                self.__updates.append(RSSUpdate(timestamp+TIMEZONE_UTC_OFFSET, update['link'], real_title, author, uuid4(), RSSUpdateType.RSS_CORRECTION))
-                warning(f"Correction for {real_title} by {author.nickname} cannot be assigned to an article")
-            else:
-                translation.corrector = author
-                translation.corrected = datetime.now()
-                translation.save()
-                info(f'Assigned correction by {author.nickname} to {translation.name}')
+            return False
+        
+        translation = RSSMonitor.find_link(update['link'])
+        if not translation:
+            self.__updates.append(RSSUpdate(timestamp+TIMEZONE_UTC_OFFSET, update['link'], real_title, author, uuid4(), RSSUpdateType.RSS_CORRECTION))
+            warning(f"Correction for {real_title} by {author.nickname} cannot be assigned to an article")
+            return False
+
+        translation.corrector = author
+        translation.corrected = datetime.now()
+        translation.save()
+        info(f'Assigned correction by {author.nickname} to {translation.name}')
+        return True
 
     def _process_update(self, update) -> bool:
         if update['guid'] in self.__finished_guids:
@@ -194,9 +206,9 @@ class RSSMonitor:
         return False
         
     def check(self):
-        info(f'Fetching {len(self.__links)} RSS feeds')
         if not self.__links:
             return
+        info(f'Fetching {len(self.__links)} RSS feeds')
         
         new_count = 0
         for link in self.__links:
@@ -206,8 +218,7 @@ class RSSMonitor:
                 error(f"RSS Update failed for feed {link} ({e})")
                 continue
                 
-            for update in feed:
-                if self._process_update(update): new_count += 1
+            new_count = [self._process_update(u) for u in feed].count(True)
 
         info(f'Got {new_count or "no"} new pages from RSS feeds')
 
