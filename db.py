@@ -102,6 +102,7 @@ class Article(BaseModel):
     link = TextField(null=True)
     name = TextField()
     words = IntegerField()
+    excluded = BooleanField(default=False)
 
     def to_dict(self):
         return {
