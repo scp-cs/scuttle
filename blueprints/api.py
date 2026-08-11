@@ -87,10 +87,9 @@ def api_no_operation():
 def search_article():
     query = request.args.get('q', None, str)
     author = request.args.get('u', None, int)
-    original = request.args.get('o', None, bool)
+    original = request.args.get('o', None, int)
     if not query:
         return result_error("Parameters missing")
-    
     return result_ok(db_search_article(query, author, original))
 
 @ApiController.get('/api/search/user')
