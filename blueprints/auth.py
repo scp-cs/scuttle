@@ -44,7 +44,15 @@ def login():
 
     if 'login_next' in session:
         del session['login_next']
-    return redirect(referrer or url_for('LeaderboardController.index'))
+
+    try:
+        if next_url := request.args.get('next', None):
+            return redirect(next_url)
+        elif referrer:
+            return redirect(referrer)
+    except Exception:
+        return redirect(url_for('LeaderboardController.index'))
+    return redirect(url_for('LeaderboardController.index'))
 
 
 @AuthController.route('/user/logout')
