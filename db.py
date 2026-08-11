@@ -19,7 +19,8 @@ def create_views(database: SqliteDatabase):
         SUM(CASE WHEN Article.is_original=FALSE THEN 1 ELSE 0 END) AS translation_count, \
         (SUM(CASE WHEN Article.is_original=FALSE THEN Article.words ELSE 0 END)/1000.0)+TOTAL(Article.bonus) AS points,\
         (SELECT COUNT(article_id) FROM Correction WHERE Corrector=User.id) AS correction_count,\
-        SUM(CASE WHEN Article.is_original=TRUE THEN 1 ELSE 0 END) AS original_count\
+        SUM(CASE WHEN Article.is_original=TRUE THEN 1 ELSE 0 END) AS original_count,\
+        (SELECT COUNT(id) FROM Article WHERE idauthor=User.id AND excluded=1) AS excluded_count\
             FROM user\
                 LEFT JOIN Article \
                     ON User.id = Article.idauthor \
@@ -244,6 +245,7 @@ class Frontpage(ViewModel):
     points = FloatField()
     correction_count = IntegerField()
     original_count = IntegerField()
+    excluded_count = IntegerField()
 
 class ApiKey(BaseModel):
     key = CharField(64)
