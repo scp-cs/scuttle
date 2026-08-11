@@ -16,6 +16,7 @@ from secrets import token_urlsafe
 from connectors.wikidotsite import snapshot_all
 from connectors.portainer import PortainerError
 from extensions import sched, webhook, portainer
+from db import database, create_views
 
 DebugToolsController = Blueprint('DebugToolsController', __name__)
 
@@ -305,3 +306,19 @@ def remove_api_key():
     flash('Klíč odstraněn')
     info(f"API key ID {key_id} deleted by {current_user.nickname} (ID: {current_user.get_id()})")
     return redirect(url_for("DebugToolsController.api_settings"))
+
+@DebugToolsController.route('/debug/drop_views')
+@login_required
+@log_access
+def drop_views():
+    to_drop = ['Frontpage', 'Series', 'Statistics', 'Correction']
+    warning("Dropping and regenerating legacy SQLite views")
+    for view in to_drop:
+        query = f'DROP VIEW {view};'
+        info(f"Executing query: {query}")
+        database.execute_sql(query)
+    info("All views succesfully dropped. Recreating them")
+    create_views(database)
+    flash("SQLite pohledy byly znovu vytvořeny. Je doporučeno restartovat aplikaci.")
+    return redirect(url_for('DebugToolsController.debug_index'))
+    
