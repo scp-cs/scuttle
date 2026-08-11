@@ -14,14 +14,16 @@
     {{form.wikidot(class='input-field mb-4', id='input-link')}}
     {{form.discord.label(class='form-label')}}
     {{form.discord(class='input-field mb-4')}}
-    
+    <div class="form-label">
+    Možnosti:
+    </div>
     <span class="mb-6">
     <span class="inline">
     {{form.can_login(class='peer hidden')}}
-    {{form.can_login.label(class='border-opacity-20 peer-checked:bg-blue-600 btn-rounded inline-block w-64 transition-all bg-gray-500 border-2 border-white', id='check-login')}}
+    {{form.can_login.label(class='tiny-btn bg-white/5 inline-block peer-checked:border-green-600 border-red-600 select-none', id='check-login')}}
     </span>
     </span>
-    {{form.submit(class='md:w-36 btn-rounded hover:bg-green-500 self-start w-full bg-green-600')}}
+    {{form.submit(class='md:w-36 glass-btn self-start w-full ')}}
 </form>
 </div>
 

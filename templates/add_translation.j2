@@ -18,7 +18,14 @@
     {{form.words(class='input-field mb-4')}}
     {{form.bonus.label(class='form-label')}}
     {{form.bonus(class='input-field mb-4')}}
-    {{form.submit(class='md:w-36 btn-rounded hover:bg-green-500 self-start w-full bg-green-600')}}
+    <div class="form-label">
+    Možnosti:
+    </div>
+    <span class="inline mb-4">
+    {{form.excluded(class='peer hidden')}}
+    {{form.excluded.label(class='tiny-btn bg-white/5 inline-block peer-checked:border-green-600 border-red-600 select-none')}}
+    </span>
+    {{form.submit(class='md:w-36 glass-btn self-start w-full')}}
 </form>
 </div>
 
