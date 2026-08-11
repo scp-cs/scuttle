@@ -82,6 +82,7 @@ def add_article(uid):
     article.author = User.get_by_id(uid)
     article.link = normalize_link(form.link.data)
     article.is_original = is_original
+    article.excluded = form.excluded.data
 
     article.save()
     
@@ -123,6 +124,7 @@ def edit_article(aid: int):
     article.words = form.words.data
     article.link = form.link.data
     article.bonus = form.bonus.data
+    article.excluded = form.excluded.data
     article.save()
 
     info(f"Article {article.name} (ID: {aid}) edited by {current_user.nickname} (ID: {current_user.get_id()})")
