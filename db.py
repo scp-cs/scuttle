@@ -22,7 +22,8 @@ def create_views(database: SqliteDatabase):
         SUM(CASE WHEN Article.is_original=TRUE THEN 1 ELSE 0 END) AS original_count\
             FROM user\
                 LEFT JOIN Article \
-                    ON User.id = Article.idauthor\
+                    ON User.id = Article.idauthor \
+                WHERE Article.excluded = 0 \
             GROUP BY User.id;")
     
     database.execute_sql("CREATE VIEW IF NOT EXISTS Series AS \
