@@ -35,8 +35,7 @@ def check_role_and_notify(uid: int, point_amount: float, original: bool):
         current_count = promoted_user.stats.first().original_count
         current_role = get_role(current_count, RoleType.WRITER)
         next_role = get_role(current_count+1, RoleType.WRITER)
-    if current_role != next_role:
-        if promoted_user.discord:
+    if current_role != next_role and promoted_user.discord:
             webhook.send_text(f'Uživatel {promoted_user.nickname} (<@{promoted_user.discord}>) dosáhl hranice pro roli {next_role["name"]}!')
 
 @ArticleController.route('/article/<int:aid>/delete', methods=["POST"])
@@ -72,7 +71,7 @@ def add_article(uid):
         flash(f'Překlad již existuje! (od uživatele {Article.get(Article.name == title).author.nickname})')
         return redirect(url_for('ArticleController.add_article', uid=uid))
     
-    if current_app.config['WEBHOOK_ENABLE']:
+    if current_app.config['WEBHOOK_ENABLE'] and not form.excluded.data:
         check_role_and_notify(uid, form.words.data / 1000 + form.bonus.data, is_original)
 
     article = Article()
@@ -115,7 +114,7 @@ def edit_article(aid: int):
         return redirect(url_for('UserController.user', uid=article.author.get_id()))
 
     point_diff = (form.words.data - article.words)/1000 + (form.bonus.data - article.bonus)
-    if point_diff > 0:
+    if point_diff > 0 and not form.excluded.data:
         check_role_and_notify(article.author.id, point_diff, article.is_original)
 
     title = form.title.data.upper() if form.title.data.lower().startswith('scp') else form.title.data
