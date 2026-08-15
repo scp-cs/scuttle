@@ -1,5 +1,7 @@
 {% extends "base.j2" %}
 
+{% set title = user.nickname%}
+
 {% block head %}
 <script src="{{url_for('static', filename='js/clipboard.min.js')}}"></script>
 <script src="{{url_for('static', filename='js/articlelinks.js')}}" defer></script>
