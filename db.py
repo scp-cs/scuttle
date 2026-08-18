@@ -23,8 +23,7 @@ def create_views(database: SqliteDatabase):
         (SELECT COUNT(id) FROM Article WHERE idauthor=User.id AND excluded=1) AS excluded_count\
             FROM user\
                 LEFT JOIN Article \
-                    ON User.id = Article.idauthor \
-                WHERE Article.excluded = 0 \
+                    ON User.id = Article.idauthor AND Article.excluded = 0 \
             GROUP BY User.id;")
     
     database.execute_sql("CREATE VIEW IF NOT EXISTS Series AS \
