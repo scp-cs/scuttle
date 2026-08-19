@@ -171,9 +171,6 @@ class DiscordWebhook():
             if not files:
                 webhook_response = requests.post(self.url, json=data)
             else:
-                print(data)
                 webhook_response = requests.post(self.url, data=data, files=files)
-                print(webhook_response.status_code)
-                print(webhook_response.content)
         except Exception as e:
-            error(f'Webhook failed to send ({str(e)})')
+            error(f'Webhook failed to send ({e!r})')
