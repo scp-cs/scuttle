@@ -26,6 +26,10 @@ Details on the scoring system can be found on our [Discord](https://discord.gg/A
   - Sends a backup summary over Discord Webhooks on completion
 - Generates embeddable badges for members' personal files which update in real time, support for different themes
 - Fully Dockerized
+- Featuring:
+    - Zero AI
+    - Zero pre-made CSS components
+    - The complete absence of 500MB Webpack bundles, Virtual DOMs, `node-modules` and similar modern JS ~bullshit~ tomfoolery
 
 ## Planned features
 
