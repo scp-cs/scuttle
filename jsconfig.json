@@ -1,7 +1,13 @@
 {
+    "compilerOptions": {
+        "checkJs": true,
+        "target": "ES2020"
+    },
     "typeAcquisition": {
         "include": [
-            "jquery"
+            "jquery",
+            "jstree",
+            "js7z-tools"
         ]
     }
 }
