@@ -46,10 +46,10 @@ statuses: Dict[str, StatusMutex] = {}
 
 AutobackupController = Blueprint("AutobackupController", __name__)
 
-# Tiny hack that allows us to call the backup_start route function in the automatically sheduled task, bypassing login
-@AutobackupController.record_once
-def setup_backup_route(setup_state):
-    setup_state.app.add_url_rule('/backup/start', view_func=login_required(backup))
+@AutobackupController.route('/backup/start')
+@login_required
+def start_backup():
+    return backup()
 
 def finish_backup():
     if Backup.get_or_none(Backup.is_finished == False) is None:
