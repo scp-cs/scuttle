@@ -1,0 +1,33 @@
+<table id="article-table" class="w-full mx-auto mt-4 mb-2 text-center transition-all border shadow-2xl bg-white/5 md:border-separate md:table-auto md:min-w-[60%] border-slate-900 md:py-5 md:w-auto border-spacing-x-12 border-spacing-y-0 md:rounded-xl backdrop-blur-sm">
+<thead>
+    <tr>
+        <th class="min-w-[12em]">Název</th>
+        <th>Počet slov</th>
+        <th>Autor</th>
+        <th>Zapsáno</th>
+        {% if current_user.is_authenticated %}
+        <th></th>
+        {% endif %}
+    </tr>
+    </thead>
+    <tbody id="co-articles">
+    {% for corr in corrections %}
+    <tr id="c-{{corr.article.id}}" class="h-12">
+        <td data-label="Název:">
+            {% if corr.article.link %} <a class="hover:underline" target="_blank" href="{{corr.article.link}}">{{corr.article.name}}</a>
+            {% else %} <span class="text-gray-500">{{corr.article.name}}</span>
+            {% endif %}
+        </td>
+        <td data-label="Počet slov:">{{corr.article.words}}</td>
+        <td data-label="Autor:"><a class="underline" href="{{url_for('UserController.user', uid=corr.author.get_id())}}">{{corr.author.nickname}}</a></td>
+        <td data-label="Zapsáno:">{{corr.timestamp.strftime('%d.%m.%Y %H:%M')}}</td>
+        {% if current_user.is_authenticated %}
+        <td class="flex flex-col gap-2 md:table-row">
+            <a class="" onclick="deleteModalOpen('{{corr.article.id}}', '{{corr.article.name}}', true)"><i class="text-2xl transition-opacity bi bi-x-circle opacity-40 hover:opacity-100"></i></a>
+        </td>
+        {% endif %}
+    </tr>
+    {% endfor %}
+   
+    </tbody>
+</table>

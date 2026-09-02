@@ -1186,10 +1186,6 @@ video {
   margin-top: auto;
 }
 
-.mr-1{
-  margin-right: 0.25rem;
-}
-
 .block{
   display: block;
 }
@@ -2257,6 +2253,10 @@ video {
   opacity: 0.25;
 }
 
+.opacity-30{
+  opacity: 0.3;
+}
+
 .opacity-40{
   opacity: 0.4;
 }
@@ -2275,10 +2275,6 @@ video {
 
 .opacity-90{
   opacity: 0.9;
-}
-
-.opacity-30{
-  opacity: 0.3;
 }
 
 .shadow-2xl{

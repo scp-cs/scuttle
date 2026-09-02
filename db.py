@@ -116,7 +116,8 @@ class Article(BaseModel):
             "corrector": self.corrector.to_dict() if self.corrector else None,
             "corrected": self.corrected,
             "link": self.link,
-            "excluded": self.excluded
+            "excluded": self.excluded,
+            "original": self.is_original
             }
 
     class Meta:

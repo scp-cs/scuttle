@@ -78,47 +78,8 @@
     </div>
 </div>
 
-<table id="translation-table" class="active-table w-full text-center mx-auto mt-4 mb-2 bg-white/5 transition-all shadow-2xl  md:border-separate md:table-auto border border-slate-900 md:py-5 md:w-auto md:min-w-[60%] border-spacing-x-12 border-spacing-y-0 md:rounded-xl backdrop-blur-sm">
-    <thead>
-    <tr>
-        <th class="min-w-[12em]">Název</th>
-        <th>Počet slov</th>
-        <th>Bonusové body</th>
-        <th>Korektoval</th>
-        <th>Zapsáno</th>
-        {% if current_user.is_authenticated %}
-        <th></th>
-        {% endif %}
-    </tr>
-    </thead>
-    <tbody id="tb-articles">
-    {% for tr in translations %}
-    <tr id="t-{{tr.id}}" class="h-12" data-article-id="{{tr.id}}">
-        <td data-label="Název:">
-            {% if tr.excluded %}
-            <i class="bi bi-database-slash opacity-30 text-lg mr-2" title="Tento článek se nepočítá do statistik"></i>
-            {% endif %}
-            {% if tr.link %} <a class="hover:underline" target="_blank" href="{{tr.link}}">{{tr.name}}</a>
-            {% else %} <span class="text-gray-500">{{tr.name}}</span>
-            {% endif %}
-        </td>
-        <td data-label="Počet slov:">{{tr.words}}</td>
-        <td data-label="Bonus:">{{tr.bonus}}</td>
-        <td data-label="Korektoval:">{% if tr.corrector %}<a class="underline" href="{{url_for('UserController.user', uid=tr.corrector.id)}}">{{tr.corrector.nickname}}</a>{% else %}N/A{% endif %}</td>
-        <td data-label="Zapsáno:">{{tr.added.strftime('%d.%m.%Y %H:%M')}}</td>
-        
-        <td class="flex flex-col gap-2 md:table-row">
-           <button class="" onclick="openExtraLinks(event, {{tr.id}})"><i class="text-2xl transition-opacity bi bi-folder opacity-40 hover:opacity-100"></i></button>
-           {% if current_user.is_authenticated %}
-            <a class="" href="{{url_for('ArticleController.edit_article', aid=tr.id)}}"><i class="text-2xl transition-opacity bi bi-pencil-square opacity-40 hover:opacity-100"></i></a>
-            <a class="" onclick="deleteModalOpen('{{tr.id}}', '{{tr.name}}')"><i class="text-2xl transition-opacity bi bi-x-circle opacity-40 hover:opacity-100"></i></a>
-          {% endif %}
-        </td>
+{% include "partials/article_list.j2" %}
 
-    </tr>
-    {% endfor %}
-    </tbody>
-</table>
 <div id="page-selector" class="flex flex-row items-center mx-auto border rounded-md cursor-pointer select-none w-min bg-white/5 backdrop-blur-sm border-slate-900">
     {% for p in range((stats.translation_count / 15)|round(0, 'ceil')|int) %}
     <span class="px-2 py-2 transition-all rounded-md hover:bg-white/30" onclick="showPage({{p}})">{{p+1}}</span>
@@ -138,7 +99,6 @@
     </div>
 </div>
 
-{% include 'partials/article_search_partials.j2'%}
 {% include 'partials/article_picker_modal.j2'%}
 {% include 'partials/extra_links_popup.j2'%}
 {% include 'partials/extra_link_form.j2'%}

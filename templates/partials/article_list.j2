@@ -1,0 +1,46 @@
+
+<table id="article-table" class="active-table w-full text-center mx-auto mt-4 mb-2 bg-white/5 transition-all shadow-2xl  md:border-separate md:table-auto border border-slate-900 md:py-5 md:w-auto md:min-w-[60%] border-spacing-x-12 border-spacing-y-0 md:rounded-xl backdrop-blur-sm">
+    <thead>
+    <tr>
+        <th class="min-w-[12em]">Název</th>
+        <th>Počet slov</th>
+        <th>Bonusové body</th>
+        <th>Korektoval</th>
+        <th>Vlastnosti</th>
+        <th>Zapsáno</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody id="tb-articles">
+    {% for tr in articles %}
+    <tr id="t-{{tr.id}}" class="h-12" data-article-id="{{tr.id}}">
+        <td data-label="Název:">
+            {% if tr.link %} <a class="hover:underline" target="_blank" href="{{tr.link}}">{{tr.name}}</a>
+            {% else %} <span class="text-gray-500">{{tr.name}}</span>
+            {% endif %}
+        </td>
+        <td data-label="Počet slov:">{{tr.words}}</td>
+        <td data-label="Bonus:">{{tr.bonus}}</td>
+        <td data-label="Korektoval:">{% if tr.corrector %}<a class="underline" href="{{url_for('UserController.user', uid=tr.corrector.id)}}">{{tr.corrector.nickname}}</a>{% else %}N/A{% endif %}</td>
+        <td data-label="Vlastnosti:">
+        {% if tr.excluded %}
+          <i class="bi bi-database-slash opacity-50 text-lg mr-2" title="Tento článek se nepočítá do statistik"></i>
+        {% endif %}
+        {% if tr.international %}
+          <i class="bi bi-globe opacity-50 text-lg mr-2" title="Překlad pro mezinárodní Hub"></i>
+        {% endif %}
+        </td>
+        <td data-label="Zapsáno:">{{tr.added.strftime('%d.%m.%Y %H:%M')}}</td>
+        
+        <td class="flex flex-col gap-2 md:table-row">
+            <button class="" onclick="openExtraLinks(event, {{tr.id}})"><i class="text-2xl transition-opacity bi bi-folder opacity-40 hover:opacity-100"></i></button>
+            {% if current_user.is_authenticated %}
+            <a class="" href="{{url_for('ArticleController.edit_article', aid=tr.id)}}"><i class="text-2xl transition-opacity bi bi-pencil-square opacity-40 hover:opacity-100"></i></a>
+            <a class="" onclick="deleteModalOpen('{{tr.id}}', '{{tr.name}}')"><i class="text-2xl transition-opacity bi bi-x-circle opacity-40 hover:opacity-100"></i></a>
+          {% endif %}
+        </td>
+
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>

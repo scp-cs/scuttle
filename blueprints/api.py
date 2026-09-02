@@ -1,12 +1,13 @@
 from logging import info
-from flask import jsonify, request, Blueprint, flash, current_app, send_file
+from flask import jsonify, request, Blueprint, flash, current_app, send_file, render_template
 from flask_login import current_user, login_required
 from datetime import datetime
 import json
 from http import HTTPStatus
 from functools import wraps
-from peewee import DoesNotExist
+from peewee import DoesNotExist, ModelSelect
 import os
+from typing import Any
 
 from db import Article, User, Frontpage, Correction, ExtraLink, ApiKey, Backup
 from framework.roles import role_badge
@@ -32,6 +33,17 @@ def api_auth_required(func):
         return func(*args, **kwargs)
     return wrapped
 
+def sort_article_select_query(query: ModelSelect[Article] | ModelSelect[Correction], sorting: str = 'latest', correction: bool = False):
+    match sorting:
+        case 'az':
+            return query.order_by(Correction.name.collate("NOCASE") if correction else Article.name.collate("NOCASE").asc()).prefetch(User)
+        case 'words':
+            return query.order_by(Correction.words.desc() if correction else Article.words.desc()).prefetch(User)
+        case 'latest':
+            return query.order_by(Correction.timestamp.desc() if correction else Article.added.desc()).prefetch(User)
+        case _:
+            return query.order_by(Correction.timestamp.desc() if correction else Article.added.desc()).prefetch(User)
+
 def result_ok(result = [], extra_data = {}):
     return jsonify({
         'status': 'OK',
@@ -46,7 +58,7 @@ def result_error(error_message = "", status_code = HTTPStatus.BAD_REQUEST):
             'errorMessage': error_message
         }), status_code
 
-def db_search_article(query: str, user_id: int | None = None, original: bool | None = None):
+def db_search_article(query: str, user_id: int | None = None, original: bool | None = None, sorting: str | None = None, page: int = 0):
     title_param = f'%{query}%'
     link_param = f"%.wikidot.com/%{query}%"
 
@@ -57,25 +69,12 @@ def db_search_article(query: str, user_id: int | None = None, original: bool | N
     if original is not None:
         db_query = db_query.where(Article.is_original == original)
 
-    results = db_query.prefetch(User)
+    total = db_query.count()
+    db_query = db_query.limit(PAGE_ITEMS).offset(page*PAGE_ITEMS)
 
-    return [{
-        'id': a.id,
-        'name': a.name,
-        'link': a.link,
-        'words': a.words,
-        'added': a.added,
-        'original': a.is_original,
-        'excluded': a.excluded,
-        'author': {
-            'id': a.author.id,
-            'name': a.author.display_name or a.author.nickname
-        },
-        'corrector': {
-            'id': a.corrector.id if a.corrector else 0,
-            'name': (a.corrector.display_name or a.corrector.nickname) if a.corrector else 'N/A'
-        }
-    } for a in results]
+    results = sort_article_select_query(db_query, sorting) if sorting else sort_article_select_query(db_query)
+
+    return total, results
 
 # Only used to get the authentication status
 # or as a ping
@@ -88,9 +87,20 @@ def search_article():
     query = request.args.get('q', None, str)
     author = request.args.get('u', None, int)
     original = request.args.get('o', None, int)
+    sorting = request.args.get('s', None, str)
+    format = request.args.get('format', 'json', str)
+    page = request.args.get('p', 0, int)
     if not query:
         return result_error("Parameters missing")
-    return result_ok(db_search_article(query, author, original))
+    count, results = db_search_article(query, author, original, sorting, page)
+    if format == 'json':
+        return result_ok([r.to_dict() for r in results])
+    elif format == 'html':
+        return render_template('partials/article_list.j2', articles=results)
+    elif format == 'count_only':
+        return result_ok({'count': count, 'per_page': PAGE_ITEMS})
+    else:
+        return result_error("Invalid format")
 
 @ApiController.get('/api/search/user')
 def search_user():
@@ -102,6 +112,9 @@ def search_user():
                                                 Frontpage.user.wikidot ** param |
                                                 Frontpage.user.display_name ** param |
                                                 Frontpage.user.discord ** param)
+    # TODO: We CAN'T put this in the model class as to_dict()
+    # Because framework.roles and db is a circular import
+    # We really should just add the role HTML thing here and everything else in the model method
     results = [{'id': u.user.id,
             'nickname': u.user.nickname,
             'discord': u.user.discord,
@@ -131,8 +144,7 @@ def api_get_articles(uid: int):
     page = request.args.get("p", 0, int)
     article_type = request.args.get("t", "translation", str)
     sort = request.args.get("s", "latest", str)
-
-    is_correction = article_type == 'correction'
+    resp_format = request.args.get("format", "json", str)
 
     match article_type:
         case 'translation':
@@ -146,20 +158,21 @@ def api_get_articles(uid: int):
 
     # Count the articles before we offset and limit
     total = select.count()
+    if resp_format == 'count_only':
+        return result_ok({'count': total, 'per_page': PAGE_ITEMS})
     select = select.limit(PAGE_ITEMS).offset(PAGE_ITEMS*page)
 
-    match sort:
-        case 'az':
-            select = select.order_by(Correction.name.collate("NOCASE") if is_correction else Article.name.collate("NOCASE").asc()).prefetch(User)
-        case 'words':
-            select = select.order_by(Correction.words.desc() if is_correction else Article.words.desc()).prefetch(User)
-        case 'latest':
-            select = select.order_by(Correction.timestamp.desc() if is_correction else Article.added.desc()).prefetch(User)
-        case _:
-            select = select.order_by(Correction.timestamp.desc() if is_correction else Article.added.desc()).prefetch(User)
+    select = sort_article_select_query(select, sort, article_type == 'correction')
 
-    return result_ok([r.to_dict() for r in select], {"total": total})
-
+    if resp_format == 'json':
+        return result_ok([r.to_dict() for r in select], {"total": total})
+    elif resp_format == 'html' and article_type != 'correction':
+        return render_template('partials/article_list.j2', articles=select)
+    elif resp_format == 'html' and article_type == 'correction':
+        return render_template('partials/correction_list.j2', corrections=select)
+    else:
+        return result_error("Invalid format parameter")
+    
 @ApiController.post('/api/user/<int:uid>/assign-correction')
 @login_required
 def assign_correction(uid: int):

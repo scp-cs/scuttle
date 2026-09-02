@@ -4,6 +4,8 @@ const pickerWindow = document.getElementById('picker-window')
 const pickerOverlay = document.getElementById('picker-overlay')
 
 const uid = window.location.pathname.split('/').at(-1)
+const typeID = {translation: 1, correction: 2, original: 3}
+const sortID = {az: 1, latest: 2, words: 3}
 
 let isOriginal = true
 let timeoutID = 0
@@ -13,31 +15,8 @@ let currentData = {}
 let isSearching = false
 let currentPage = 0
 let currentSorting = "latest"
-
 let currentType = "translation"
-
-// ===== UTILITY FUNCTIONS ======
-
-/**
- * Accepts a parsable date string and converts it to the "cs-CZ" locale format
- * @param {string} dateString 
- * @returns string
- */
-function dateAsLocal(dateString) {
-    const date = new Date(Date.parse(dateString))
-    return date.toLocaleString("cs-CZ", {year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit"})
-}
-
-/**
- * Adds or changes a URL GET parameter and reloads the page
- * @param {string} key The key to be added / changed
- * @param {string} value The value to set
- */
-function addGetParam(key, value) {
-    let currentLocation = new URL(window.location.href)
-    currentLocation.searchParams.set(key, value)
-    window.location = currentLocation.toString()
-}
+let searchQuery = ""
 
 // ===== MODAL FUNCTIONS =====
 
@@ -110,317 +89,81 @@ function setSelectedPage(x) {
     $("#page-selector").children().eq(x).addClass('bg-white/10')
 }
 
-function setSelectedSorter(sort) {
-    let x;
-    switch (sort) {
-        case 'az':
-            x = 1
-            break;
-        
-        case 'latest':
-            x = 2
-            break;
-
-        case 'words':
-            x = 3
-            break;
-
-        default:
-            break;
-    }
-    $("#sort-selector").children().removeClass('bg-white/30')
-    $("#sort-selector").children().eq(x).addClass('bg-white/30')
-}
-
-function setSelectedType(type) {
-    let x;
-    switch (type) {
-        case 'translation':
-            x = 1
-            break;
-        
-        case 'correction':
-            x = 2
-            break;
-
-        case 'original':
-            x = 3
-            break;
-
-        default:
-            break;
-    }
-    $("#type-selector").children().removeClass('bg-white/30')
-    $("#type-selector").children().eq(x).addClass('bg-white/30')
-}
-
 async function showPage(page) {
     setSelectedPage(page)
+    let searchPromise
     if(isSearching) {
-        addRows(currentData.result
-            .slice(page*15, (page+1)*15), currentData.hasAuth)
+        searchPromise = fetch(`/api/search/article?` + new URLSearchParams({
+            q: searchQuery,
+            u: uid,
+            o: currentType == 'original' ? 1 : 0,
+            s: currentSorting,
+            format: 'html',
+            p: page
+        }))
     } else {
-        await fetchPage(page, currentSorting, currentType).then(data => {
-            setPageCount(Math.ceil(data.total/15))
-            addRows(data.result, data.hasAuth)
-        })  
+        searchPromise = fetch(`/api/user/${uid}/articles?` + new URLSearchParams({
+            p: page,
+            t: currentType,
+            s: currentSorting,
+            format: 'html'
+            }))
     }
-}
 
-function addRows(rows, hasAuth) {
-    switch (currentType) {
-        case 'translation':
-            $('#tb-articles').empty()
-            rows.forEach(row => {addTranslationRow(row, hasAuth)})
-            break;
-
-        case 'correction':
-            $('#co-articles').empty()
-            rows.forEach(row => {addCorrectionRow(row, hasAuth)})
-            break;
-        
-        case 'original':
-            $('#or-articles').empty()
-            rows.forEach(row => {addOriginalRow(row, hasAuth)})
-            break;
-
-        default:
-            break;
-    }
+    searchPromise.then(data => data.text())
+    .then(html => {
+        $('#article-table').replaceWith(html)
+    })
 }
 
 function setSorting(order) {
-    setSelectedSorter(order)
-    if(isSearching) {
-        switch (order) {
-            case 'az':
-                currentData.result.sort((a, b) => a.name.localeCompare(b.name, undefined, {numeric: true}))
-                break
-            case 'latest':
-                currentData.result.sort((a, b) => {return Date.parse(b.added) - Date.parse(a.added)})
-                break
-            case 'words':
-                currentData.result.sort((a, b) => b.words - a.words)
-            default:
-                break
-        }
-        showPage(0)
-    } else {
-        currentSorting = order
-        showPage(0)
-    }
-}
-
-function addTranslationRow(article, hasAuth) {
-    let template = $("#translation-row-template").contents().clone(true, true)
-    if(article.link) {
-        let link = $("<a>", {
-            class: "hover:underline",
-            href: article.link,
-            target: "_blank",
-            text: article.name})
-        template.find("#translation-name").append(link)
-    } else {
-        template.find("#translation-name").addClass("text-gray-500").text(article.name)
-    }
-    if(article.excluded) {
-        const indicator = $("<i>", {
-            class: "bi bi-database-slash opacity-30 text-lg mr-2",
-            title: "Tento článek se nepočítá do statistik"
-        })
-        template.find("#translation-name").prepend(indicator)
-    }
-    template.find('#translation-bonus').text(article.bonus)
-    template.find('#translation-words').text(article.words)
-    
-    if(article.corrector) {
-        let link = $("<a>", {
-            class: "underline",
-            href: `/user/${article.corrector.id}`,
-            text: article.corrector.nickname})
-        template.find("#translation-corrector").append(link)
-    } else {
-        template.find("#translation-corrector").text("N/A")
-    }
-
-    template.find("#translation-timestamp").text(dateAsLocal(article.added))
-
-    let action_template;
-
-    if(hasAuth) {
-        action_template = $("#translation-actions-template").contents().clone(true, true)
-        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
-        action_template.find("#translation-edit").prop("href", `/article/${article.id}/edit`)
-        action_template.find("#translation-delete").on("click", () => {deleteModalOpen(article.id, article.name)})
-    } else {
-        action_template = $("#unauthorized-actions-template").contents().clone(true, true)
-        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
-    }
-
-    template.append(action_template)
-
-    template.attr('id', `t-${article.id}`)
-    template.attr("data-article-id", article.id)
-
-    $("#tb-articles").append(template)
-}
-
-function addOriginalRow(article, hasAuth) {
-    let template = $("#original-row-template").contents().clone(true, true)
-
-    if(article.link) {
-        let link = $("<a>", {
-            class: "hover:underline",
-            href: article.link,
-            target: "_blank",
-            text: article.name})
-        template.find("#article-name").append(link)
-    } else {
-        template.find("#article-name").addClass("text-gray-500").text(article.name)
-    }
-    if(article.excluded) {
-        const indicator = $("<i>", {
-            class: "bi bi-database-slash opacity-30 text-lg mr-2",
-            title: "Tento článek se nepočítá do statistik"
-        })
-        template.find("#article-name").prepend(indicator)
-    }
-    template.find('#article-words').text(article.words)
-    
-    if(article.corrector) {
-        let link = $("<a>", {
-            class: "underline",
-            href: `/user/${article.corrector.id}`,
-            text: article.corrector.nickname})
-        template.find("#article-corrector").append(link)
-    } else {
-        template.find("#article-corrector").text("N/A")
-    }
-
-    template.find("#article-timestamp").text(dateAsLocal(article.added))
-    
-    let action_template;
-
-    if(hasAuth) {
-        action_template = $("#translation-actions-template").contents().clone(true, true)
-        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
-        action_template.find("#translation-edit").prop("href", `/article/${article.id}/edit`)
-        action_template.find("#translation-delete").on("click", () => {deleteModalOpen(article.id, article.name)})
-    } else {
-        action_template = $("#unauthorized-actions-template").contents().clone(true, true)
-        action_template.find("#translation-links").attr("onclick", `openExtraLinks(event, ${article.id})`)
-    }
-
-    template.append(action_template)
-
-    template.attr("id", `o-${article.id}`)
-    template.attr("data-article-id", article.id)
-
-    $("#or-articles").append(template)
-}
-
-function addCorrectionRow(correction, hasAuth) {
-    let template = $('#correction-row-template').contents().clone(true, true)
-    //template.find('#correction-name').text(correction.article.name)
-
-    if(correction.article.link) {
-        let link = $("<a>", {
-            class: "hover:underline",
-            href: correction.article.link,
-            target: "_blank",
-            text: correction.article.name})
-        template.find("#correction-name").append(link)
-    } else {
-        template.find("#correction-name").addClass("text-gray-500").text(correction.article.name)
-    }
-
-    template.find('#correction-words').text(correction.article.words)
-
-    let authorLink = $("<a>", {
-        class: "underline",
-        href: `/user/${correction.author.id}`,
-        text: correction.author.nickname})
-
-    template.find('#correction-author').append(authorLink)
-    template.find('#correction-timestamp').text(dateAsLocal(correction.timestamp))
-
-    if(hasAuth) {
-        let action_template = $("#correction-actions-template").contents().clone(true, true)
-        action_template.find("#correction-delete").on("click", () => {deleteModalOpen(correction.article.id, correction.article.name, true)})
-        template.append(action_template)
-    }
-
-    template.attr("id", `c-${correction.article.id}`)
-    template.attr("data-article-id", correction.article.id)
-
-    $('#co-articles').append(template)
-}
-
-async function fetchPage(page, sort = 'latest', type = 'translation') {
-    const pageData = await fetch(`/api/user/${uid}/articles?` + new URLSearchParams({p: page, s: sort, t: type})).then(response => response.json())
-    setPageCount(Math.ceil(pageData.total/15))
-    return pageData
+    currentSorting = order
+    $("#sort-selector").children().removeClass('bg-white/30')
+    $("#sort-selector").children().eq(sortID[order]).addClass('bg-white/30')
+    showPage(0)
 }
 
 function searchArticle(query) {
     if (query == "" || query.length <= 2) {
         if(isSearching) {
             isSearching = false
+            fetch(`/api/user/${uid}/articles?` + new URLSearchParams({
+                t: currentType,
+                format: 'count_only'
+            })).then(data => data.json())
+            .then(json => {
+                setPageCount(json.result.count / json.result.per_page)
+            })
             showPage(0)
         }
         return
     }
     isSearching = true
+    searchQuery = query
     $('.usr-row').animate({opacity: 0}, 300)
-    fetch('/api/search/article?' + new URLSearchParams({
-        'q': query,
-        'u': uid,
-        'o': currentType === 'original' ? 1 : 0
-    })).then(response => response.json()).then(r => {
-        currentData = r
-        setPageCount(Math.ceil(r.result.length/15))
-        showPage(0)
-    })
-
+    fetch(`/api/search/article?` + new URLSearchParams({
+            q: searchQuery,
+            u: uid,
+            format: 'count_only'
+        })).then(response => response.json())
+        .then(json => {
+            setPageCount(json.result.count / json.result.per_page)
+        })
+    showPage(0)
 }
 
 async function setType(type) {
-    setSelectedType(type)
-    switch (type) {
-        case 'translation':
-            $("#search-field").on("input", handleSearch)
-            currentType = type
-            console.log("Set type to Translation")
-            await showPage(0)
-            $(".active-table").replaceWith($('#translation-table-partial').contents().clone(true, true).addClass('active-table'))
-            setSelectedPage(0)
-            setSorting('latest')
-            break
-
-        case 'correction':
-            $("#search-field").off("input", handleSearch)
-            currentType = type
-            console.log("Set type to Correction")
-            $(".active-table").replaceWith($('#correction-table-partial').contents().clone(true, true).addClass('active-table'))
-            showPage(0)
-            break
-
-        case 'original':
-            currentType = type
-            console.log("Set type to Original")
-            $("#search-field").on("input", handleSearch)
-            $(".active-table").replaceWith($('#original-table-partial').contents().clone(true, true).addClass('active-table'))
-            showPage(0)
-            break
-
-        default:
-            console.error("Unknown type")
-            break
-    }
-    if(isSearching) {
-        $("#search-field").val("")
-        searchArticle("")
-    }
+    currentType = type
+    $("#type-selector").children().removeClass('bg-white/30')
+    $("#type-selector").children().eq(typeID[type]).addClass('bg-white/30')
+    fetch(`/api/user/${uid}/articles?` + new URLSearchParams({
+        t: currentType,
+        format: 'count_only'
+    })).then(data => data.json())
+    .then(json => {
+        setPageCount(json.result.count / json.result.per_page)
+    })
+    showPage(0)
 }
 
 function handleSearch(e) {
@@ -431,8 +174,6 @@ function handleSearch(e) {
         searchArticle(e.target.value)
     }
 }
-
-
 
 // ===== ARTICLE PICKER FUNCTIONS =====
 

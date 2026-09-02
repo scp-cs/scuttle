@@ -73,13 +73,10 @@ def edit_user(uid: int):
 
 @UserController.route('/user/<int:uid>')
 def user(uid: int):
-    sort = request.args.get('sort', 'latest', str)
     user = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
-    corrections = list(user.corrections)
     # TODO: Extract constant
     translations = list(user.articles.where(Article.is_original == False).order_by(Article.added.desc()).limit(15).prefetch(User))
-    originals = list(user.articles.where(Article.is_original == True).prefetch(User))
-    return render_template('user.j2', user=user, stats=user.stats.first(), translations=translations, corrections=corrections, originals=originals, sort=sort)
+    return render_template('user.j2', user=user, stats=user.stats.first(), articles=translations)
 
 # TODO: Make this and some other destructive routes POST-only
 # TODO: Maybe just hide users instead of deleting them as to not fuck up DB integrity
