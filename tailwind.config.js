@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ["templates/**/*.j2", "utils.py", "static/js/*.js", "framework/config/roles.yaml"],
+  content: ["templates/**/*.j2", "utils.py", "framework/accesscontrol.py", "static/js/*.js", "framework/config/roles.yaml"],
   safelist: ['animate-fadeout', 'animate-fadein', 'border-green-500', 'border-purple-600', 'border-yellow-400', 'border-red-600', 'border-rose-500', 'opacity-0'],
   theme: {
     extend: {

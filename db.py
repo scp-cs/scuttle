@@ -67,6 +67,7 @@ class User(BaseModel):
     temp_pw = BooleanField(default=True, null=True)
     wikidot = TextField(unique=True)
     avatar_hash = TextField(default=True, null=True)
+    permissions = IntegerField(default=0)
 
     @property
     def can_login(self) -> bool:

@@ -38,7 +38,7 @@ from blueprints.autobackup import AutobackupController
 from blueprints.embed import EmbedController
 from blueprints.leaderboard import LeaderboardController
 
-from extensions import login_manager, sched, oauth, rss, webhook, portainer
+from extensions import login_manager, sched, oauth, rss, webhook, portainer, acl
 
 app = Flask(__name__)
 
@@ -150,6 +150,9 @@ def extensions_init() -> None:
     # Check if Portainer config is present
     if config_has_key(app.config, 'BACKUP.PORTAINER'):
         portainer.init_app(app)
+
+    # Init access control
+    acl.init_app(app)
 
 def create_directories(app: Flask) -> None:
     """

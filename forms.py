@@ -53,6 +53,7 @@ class NewUserForm(FlaskFormEx):
     wikidot = StringField('Wikidot ID', validators=[InputRequired()])
     discord = StringField('Discord ID', validators=[DiscordID()])
     can_login = BooleanField('Administrátor')
+    permissions = IntegerField('Oprávnění')
     submit = SubmitField('Přidat')
 
 class EditUserForm(NewUserForm):
