@@ -5,6 +5,14 @@ ContentController = Blueprint('ContentController', __name__)
 
 PROFILE_DIR = path.join(getcwd(), 'temp', 'avatar')
 
+# We add THIS awful thing to make the browser HAPPY so that it will load the damn library
+@ContentController.after_app_request
+def force_coop_coep(response):
+    if request.path.startswith('/static/js/js7z'):
+        response.headers['Cross-Origin-Resource-Policy'] = 'cross-origin'
+        response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    return response
+
 # This really should be sent by the webserver too but unnnghhh hard
 # (also I cannot imagine any scenario where an instance of this app gets more than a couple dozen of users every day)
 @ContentController.route('/content/avatar/<int:uid>')
