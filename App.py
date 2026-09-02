@@ -3,6 +3,7 @@ import json
 from logging import info, warning, error, critical
 import logging
 from os import environ as env, makedirs, path, getcwd
+import sys
 
 # External
 from flask import Flask
@@ -200,7 +201,7 @@ def register_template_globals(app: Flask) -> None:
     app.add_template_global(has_badge)
     app.add_template_global(get_all_badges)
     app.add_template_global(role_type_to_points)
-    app.add_template_global(APP_VERSION, 'APP_VERSION')
+    app.add_template_global(lambda: APP_VERSION, 'APP_VERSION')
 
 # TODO: App factory??
 if __name__ == '__main__':
@@ -215,9 +216,13 @@ if __name__ == '__main__':
     # Load config file or create it if there isn't one
     if not ensure_config('config.json') or not app.config.from_file('config.json', json.load):
         critical("Config file is inaccessible, malformed or could not be created")
-        exit(1)
+        sys.exit(1)
 
-    create_directories(app)
+    try:
+        create_directories(app)
+    except OSError:
+        critical("Could not create directories, see logs")
+        sys.exit(1)
 
     # Store all the singleton classes in config to access them from blueprints
     # TODO: do something abt this
@@ -227,9 +232,13 @@ if __name__ == '__main__':
     register_blueprints(app)
 
     # Initialize the database
-    db.database.connect()
-    db.database.create_tables(db.models)
-    db.create_views(db.database)
+    try:
+        db.database.connect()
+        db.database.create_tables(db.models)
+        db.create_views(db.database)
+    except Exception: # noqa: BLE001
+        critical("Could not connect to database, see logs")
+        sys.exit(1)
 
     # Create the admin user
     user_init()
@@ -237,10 +246,14 @@ if __name__ == '__main__':
     # Generate signing keys
     if not generate_signing_keys():
         critical("Error while generating signing keys. Exiting...")
-        exit(1)
+        sys.exit(1)
 
     # Load extensions and enable integrations based on config
-    extensions_init()
+    try:
+        extensions_init()
+    except Exception: # noqa: BLE001
+        critical("Error while initializing extensions, see logs")
+        sys.exit(1)
 
     # Force oauthlib to allow insecure transport when debugging
     if app.config['DEBUG']:
