@@ -19,7 +19,7 @@ import utils
 
 # External
 import urllib.parse
-from flask import Blueprint, redirect, render_template, url_for, current_app, jsonify, request, abort, send_file, flash, has_request_context
+from flask import Blueprint, redirect, render_template, url_for, current_app, jsonify, request, abort, send_file, flash, has_request_context, make_response
 from flask_login import current_user, login_required
 from playhouse.shortcuts import model_to_dict
 import py7zr
@@ -376,3 +376,10 @@ def backup():
     info('WikiComma started')
     return "Záloha byla spuštěna"
 
+@AutobackupController.route('/backup/explorer')
+def run_backup_explorer():
+    response = make_response(render_template('backups/backup_explorer.j2'))
+    # Set COOP/COEP headers to make the multithreaded version of js7z work properly
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    return response

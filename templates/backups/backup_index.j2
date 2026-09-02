@@ -101,9 +101,10 @@
             <td>{{backup.sha1 or "N/A"}}</td>
             <td>
                 {% if backup.is_finished %}
-                <a class="inline-block w-full mx-1 mb-2 md:inline md:w-auto md:mb-0" href="{{url_for('AutobackupController.backup_download', backup_id=backup.id)}}" title="Stáhnout"><i class="text-3xl transition-opacity bi bi-download opacity-40 hover:opacity-100"></i></a>
-                <a class="inline-block w-full mx-1 mb-2 md:inline md:w-auto md:mb-0" href="{{url_for('AutobackupController.backup_download_sig', backup_id=backup.id)}}" title="Stáhnout podpis"><i class="text-3xl transition-opacity bi bi-key opacity-40 hover:opacity-100"></i></a>
-                <a class="inline-block w-full mx-1 mb-2 md:inline md:w-auto md:mb-0" href="{{url_for('AutobackupController.backup_delete', backup_id=backup.id)}}" title="Odstranit"><i class="text-3xl transition-opacity bi bi-trash opacity-40 hover:opacity-100"></i></a>
+                <a class="inline-block w-full mx-1 mb-2 md:inline md:w-auto md:mb-0" target="Amogus" href="{{url_for('AutobackupController.run_backup_explorer', backup_id=backup.id)}}" title="Otevřít"><i class="text-xl transition-opacity bi bi-folder2-open opacity-40 hover:opacity-100"></i></a>
+                <a class="inline-block w-full mx-1 mb-2 md:inline md:w-auto md:mb-0" href="{{url_for('AutobackupController.backup_download', backup_id=backup.id)}}" title="Stáhnout"><i class="text-xl transition-opacity bi bi-download opacity-40 hover:opacity-100"></i></a>
+                <a class="inline-block w-full mx-1 mb-2 md:inline md:w-auto md:mb-0" href="{{url_for('AutobackupController.backup_download_sig', backup_id=backup.id)}}" title="Stáhnout podpis"><i class="text-xl transition-opacity bi bi-key opacity-40 hover:opacity-100"></i></a>
+                <a class="inline-block w-full mx-1 mb-2 md:inline md:w-auto md:mb-0" href="{{url_for('AutobackupController.backup_delete', backup_id=backup.id)}}" title="Odstranit"><i class="text-xl transition-opacity bi bi-trash opacity-40 hover:opacity-100"></i></a>
                 {% else %}
                 <div class="animate-pulse px-4 rounded-lg text-blue-500">Záloha probíhá</div>
                 {% endif %}
