@@ -43,6 +43,7 @@ class NewArticleForm(FlaskFormEx):
     bonus = IntegerField('Bonusové body', default=0)
     link = StringField('Odkaz')
     excluded = BooleanField('Vyloučit z počítání bodů', default=False)
+    international = BooleanField('Mezinárodní překlad', default=False)
     submit = SubmitField('Odeslat')
 
 class EditArticleForm(NewArticleForm):

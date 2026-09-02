@@ -45,7 +45,7 @@ def create_views(database: SqliteDatabase):
     database.execute_sql("CREATE VIEW IF NOT EXISTS Correction AS\
         SELECT id as article_id, idauthor AS author, idcorrector AS corrector, corrected AS timestamp, words, name\
             FROM Article WHERE idcorrector IS NOT NULL;")
-
+    
 class BaseModel(Model):
     class Meta:
         database = database
@@ -104,6 +104,7 @@ class Article(BaseModel):
     name = TextField()
     words = IntegerField()
     excluded = BooleanField(default=False)
+    international = BooleanField(default=False)
 
     def to_dict(self):
         return {
@@ -117,6 +118,7 @@ class Article(BaseModel):
             "corrected": self.corrected,
             "link": self.link,
             "excluded": self.excluded,
+            "international": self.international,
             "original": self.is_original
             }
 
@@ -244,6 +246,7 @@ class Frontpage(ViewModel):
     correction_count = IntegerField()
     original_count = IntegerField()
     excluded_count = IntegerField()
+    
 
 class ApiKey(BaseModel):
     key = CharField(64)

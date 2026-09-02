@@ -83,6 +83,7 @@ def add_article(uid):
     article.link = normalize_link(form.link.data)
     article.is_original = is_original
     article.excluded = form.excluded.data
+    article.international = form.international.data
 
     article.save()
     
@@ -108,7 +109,8 @@ def edit_article(aid: int):
                  'bonus': article.bonus,
                  'link': article.link,
                  'translator': article.author.nickname,
-                 'excluded': article.excluded}
+                 'excluded': article.excluded,
+                 'international': article.international}
         return render_template('edit_article.j2', form=EditArticleForm(data=fdata))
     
     form = EditArticleForm()
@@ -127,6 +129,7 @@ def edit_article(aid: int):
     article.link = form.link.data
     article.bonus = form.bonus.data
     article.excluded = form.excluded.data
+    article.international = form.international.data
     article.save()
 
     info(f"Article {article.name} (ID: {aid}) edited by {current_user.nickname} (ID: {current_user.get_id()})")
