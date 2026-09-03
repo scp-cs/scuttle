@@ -78,7 +78,6 @@ def user(uid: int):
     user = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
     # TODO: Extract constant
     translations = list(user.articles.where(Article.is_original == False).order_by(Article.added.desc()).limit(15).prefetch(User))
-    originals = list(user.articles.where(Article.is_original == True).prefetch(User))
     perms_strings = [(p.name, ACLManager.get_permission_color_class(p)) 
                         for p in ACLManager._expand_permissions(UserPermission(user.permissions))]
     if len(perms_strings) == 0:
@@ -86,10 +85,7 @@ def user(uid: int):
     return render_template('user.j2',
                            user=user,
                            stats=user.stats.first(),
-                           translations=translations,
-                           corrections=corrections,
-                           originals=originals,
-                           sort=sort,
+                           articles=translations,
                            perms=perms_strings)
 
 # TODO: Make this and some other destructive routes POST-only
