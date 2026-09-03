@@ -1,13 +1,22 @@
+# Builtins
 from logging import info, warning
-from flask import Blueprint, render_template, redirect, url_for, request
+
+# External
+from flask import Blueprint, render_template, redirect, url_for, request, abort
 from flask_login import login_required, current_user
 
-from extensions import rss, sched
+# Internal
+from extensions import rss, sched, acl
 from forms import AssignCorrectionForm
+from framework.accesscontrol import UserPermission
 
 RssPageController = Blueprint('RssPageController', __name__)
 
 # TODO: Create db table for RSS updates
+
+@RssPageController.before_request
+def check_perms():
+    if not acl.check_permission(UserPermission.ACCESS_RSS): abort(403)
 
 @RssPageController.route('/changes')
 @login_required

@@ -31,6 +31,16 @@
             {% endif %}
             </div>
             <p class="mt-1 text-xl"><b>Celkem překladů:</b> {{stats.translation_count}}</p>
+            {% if current_user.is_authenticated and perms is defined %}
+            <div class="mt-1">
+              <p class="text-xl inline"><b>Oprávnění:</b></p>
+              <div class="inline-flex flex-row items-center gap-1">
+              {% for p in perms %}
+              <span class="inline {{p[1]}} px-2 border py-0.5 text-sm text-center rounded-full">{{p[0]}}</span>
+              {% endfor %}
+              </div>
+            </div>
+            {% endif %}
             
             
             <div class="flex flex-col gap-1 my-3 md:flex-row md:my-2 align-center">
@@ -40,15 +50,11 @@
                 <button class="glass-btn" onclick="articlePickerOpen()"><i class="mr-2 text-2xl bi bi-file-earmark-check"></i>Přidat korekci</button>
                 <a href="{{url_for('ArticleController.add_article', uid=user.id, original=1)}}" class="glass-btn"><i class="mr-2 text-2xl bi bi-file-earmark-text"></i>Přidat článek</a>
                 <a href="{{url_for('UserController.edit_user', uid=user.id)}}" class="glass-btn"><i class="mr-2 text-2xl bi bi-person-gear"></i>Upravit uživatele</a>
+                <a href="{{url_for('UserController.edit_permissions', uid=user.id)}}" class="glass-btn"><i class="mr-2 text-2xl bi bi-person-lock"></i>Upravit oprávnění</a>
                 <a id="del-btn" href="javascript:void(0)" class="glass-btn bg-red-500/10 hover:bg-red-500/20"><i class="mr-2 text-2xl bi bi-person-x"></i>Smazat uživatele</a>
                 <a id="del-confirm" href="{{url_for('UserController.delete_user', uid=user.id)}}" class="hidden glass-btn bg-red-500/10 hover:bg-red-500/20">
                     <i class="mr-2 text-2xl bi bi-check-lg"></i> Potvrdit smazání?
                 </a>
-                {% if not user.password %}
-                  <a class="glass-btn bg-blue-500/10 hover:bg-blue-500/20" href="{{url_for('UserController.grant_admin_perms', uid=user.id)}}"><i class="mr-2 text-2xl bi bi-person-heart "></i>Udělit administrátorská práva</a>
-                {% else %}
-                  <a class="glass-btn bg-red-500/10 hover:bg-red-500/20" href="{{url_for('UserController.revoke_admin_perms', uid=user.id)}}"><i class="mr-2 text-2xl bi bi-person-fill-slash"></i>Odebrat administrátorská práva</a>
-                {% endif %}
                 {% endif %}
             </div>
             

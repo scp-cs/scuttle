@@ -1,8 +1,10 @@
 from typing import Any
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, IntegerField, BooleanField, ValidationError, HiddenField
+from wtforms import StringField, PasswordField, SubmitField, IntegerField, BooleanField, ValidationError, HiddenField, SelectMultipleField
 from wtforms.validators import EqualTo, Length, url, NumberRange, InputRequired
+from wtforms.widgets import ListWidget, CheckboxInput
 from flask import flash
+from framework.accesscontrol import UserPermission
 
 class FlaskFormEx(FlaskForm):
     def validate_and_flash(self) -> bool:
@@ -54,6 +56,7 @@ class NewUserForm(FlaskFormEx):
     wikidot = StringField('Wikidot ID', validators=[InputRequired()])
     discord = StringField('Discord ID', validators=[DiscordID()])
     can_login = BooleanField('Administrátor')
+    permissions = IntegerField('Oprávnění')
     submit = SubmitField('Přidat')
 
 class EditUserForm(NewUserForm):
@@ -74,3 +77,24 @@ class AssignCorrectionForm(FlaskFormEx):
     link = HiddenField('link')
     title = HiddenField('title')
     submit = SubmitField('Přiřadit')
+
+class PermissionEditForm(FlaskFormEx):
+    perms = SelectMultipleField("Oprávnění",
+            choices=[
+                (UserPermission.MASTER_ADMIN, "MASTER ADMIN", {"description": "Uděluje všechna ostatní oprávnění a umožňuje je přidávat ostatním uživatelům"}),
+                (UserPermission.MANAGE_ARTICLE_SELF, "SPRÁVA VLASTNÍCH ČLÁNKŮ", {"description": "Umožňuje uživateli přidávat, upravovat a mazat své vlastní články"}),
+                (UserPermission.MANAGE_ARTICLE_ALL, "SPRÁVA VŠECH ČLÁNKŮ", {"description": "Umožňuje přidávat, upravovat a mazat články ostatních uživatelů a přiřazovat korekce"}),
+                (UserPermission.MANAGE_USERS, "SPRÁVA UŽIVATELŮ", {"description": "Umožňuje přidávat, upravovat a mazat uživatele"}),
+                (UserPermission.DEBUG_LOW, "VÝVOJÁŘ 1", {"description": "Umožňuje provádět bezpečné vývojářské operace"}),
+                (UserPermission.DEBUG_HIGH, "VÝVOJÁŘ 2", {"description": "Umožňuje provádět veškeré vývojářské operace a přidělovat některá oprávnění"}),
+                (UserPermission.VIEW_BACKUPS, "ZOBRAZENÍ ZÁLOH", {"description": "Umožňuje prohlížet a stahovat zálohy z archivu"}),
+                (UserPermission.MANAGE_BACKUPS, "SPRÁVA ZÁLOH", {"description": "Umožňuje mazat zálohy, konfigurovat a spouštět WikiComma"}),
+                (UserPermission.MANAGE_BOT, "SPRÁVA BOTA", {"description": "Umožňuje spravovat Discord bota"}),
+                (UserPermission.ACCESS_RSS, "PŘÍSTUP RSS", {"description": "Umožňuje přidávat články pomocí RSS"}),
+                (UserPermission.ADMIN, "ADMIN", {"description": "Umožňuje provádět obvyklé administrátorské činnosti"}),
+                (UserPermission.API, "API", {"description": "Umožňuje přistupovat k zabezpečeným API endpointům, vytvářet a deaktivovat osobní API klíče"}),
+            ],
+            coerce=int,
+            widget=ListWidget(prefix_label=False),
+            option_widget=CheckboxInput())
+    submit = SubmitField('Potvrdit')

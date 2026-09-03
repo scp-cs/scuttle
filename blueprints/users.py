@@ -1,15 +1,17 @@
 from http import HTTPStatus
 from peewee import IntegrityError
 from flask import Blueprint, url_for, redirect, session, request, render_template, abort, flash, current_app
-from forms import NewUserForm, EditUserForm
+from forms import NewUserForm, EditUserForm, PermissionEditForm
 from flask_login import current_user, login_required
 from db import User, Article
-from logging import info, error
+from logging import info, error, warning
 from crypto import pw_hash
 from tasks import discord_tasks
 from secrets import token_urlsafe
+from functools import reduce
 
 from extensions import sched, webhook
+from framework.accesscontrol import ACLManager, UserPermission
 
 UserController = Blueprint('UserController', __name__)
 
@@ -76,7 +78,19 @@ def user(uid: int):
     user = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
     # TODO: Extract constant
     translations = list(user.articles.where(Article.is_original == False).order_by(Article.added.desc()).limit(15).prefetch(User))
-    return render_template('user.j2', user=user, stats=user.stats.first(), articles=translations)
+    originals = list(user.articles.where(Article.is_original == True).prefetch(User))
+    perms_strings = [(p.name, ACLManager.get_permission_color_class(p)) 
+                        for p in ACLManager._expand_permissions(UserPermission(user.permissions))]
+    if len(perms_strings) == 0:
+        perms_strings = [('ŽÁDNÁ', 'bg-white/5 border-white/20')]
+    return render_template('user.j2',
+                           user=user,
+                           stats=user.stats.first(),
+                           translations=translations,
+                           corrections=corrections,
+                           originals=originals,
+                           sort=sort,
+                           perms=perms_strings)
 
 # TODO: Make this and some other destructive routes POST-only
 # TODO: Maybe just hide users instead of deleting them as to not fuck up DB integrity
@@ -140,4 +154,40 @@ def revoke_admin_perms(uid: int):
     flash(f'Uživatel {user.nickname} už není administrátor')
     webhook.send_text(f"Uživateli {user.nickname} byla odebrána administrátorská práva")
     
+    return redirect(url_for('UserController.user', uid=uid))
+
+@UserController.route('/user/<int:uid>/permissions', methods=["GET", "POST"])
+@login_required
+def edit_permissions(uid: int):
+    user = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
+    if user.permissions & UserPermission.MASTER_ADMIN:
+        flash("Oprávnění tohoto uživatele nelze upravovat")
+        return redirect(url_for('UserController.user', uid=uid))
+    perms = ACLManager._expand_permissions(UserPermission(user.permissions))
+    form = PermissionEditForm()
+    if request.method == "GET":
+        form.perms.data = list(perms)
+        return render_template('auth/permissions.j2', form=form)
+
+    if not form.validate_and_flash():
+        return redirect(url_for('UserController.edit_permissions', uid=uid))
+
+    new_perms = ACLManager._expand_permissions(UserPermission(reduce(lambda x, y: x | y, form.perms.data)))
+    perm_diff = perms ^ new_perms
+
+    if not perm_diff:
+        flash("Nebyly provedeny žádné změny")
+        return redirect(url_for('UserController.user', uid=uid))
+
+    current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
+
+    if not ACLManager.can_alter_perms(current_user_perms, perm_diff):
+        warning(f"Permission change {user.permissions} => {new_perms} rejected. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
+        flash("Na provedení této operace nemáte oprávnění")
+        return redirect(url_for('UserController.user', uid=uid))
+
+    user.permissions = new_perms
+    user.save()
+    flash("Oprávnění aktualizována")
+    info(f"Permission change {user.permissions} => {new_perms} accepted. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
     return redirect(url_for('UserController.user', uid=uid))

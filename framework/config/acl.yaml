@@ -1,0 +1,88 @@
+lists:
+  ArticleController:
+    add_article:
+      - MANAGE_ARTICLE_SELF
+    delete_article:
+      - MANAGE_ARTICLE_SELF
+    edit_article:
+      - MANAGE_ARTICLE_SELF
+    assign_correction:
+      - MANAGE_ARTICLE_ALL
+    assign_link:
+      - MANAGE_ARTICLE_ALL
+  AutobackupController:
+    backup_index:
+      - VIEW_BACKUPS
+    backup_download:
+      - VIEW_BACKUPS
+    backup_download_sig:
+      - VIEW_BACKUPS
+    backup_delete:
+      - MANAGE_BACKUPS
+    backup_config:
+      - MANAGE_BACKUPS
+    start_backup:
+      - MANAGE_BACKUPS
+  DebugToolsController:
+    api_settings:
+      - API
+    new_api_key:
+      - API
+    remove_api_key:
+      - API
+    nickupdate:
+      - DEBUG_LOW
+    avdownload:
+      - DEBUG_LOW
+    av_cache_invalidate:
+      - DEBUG_LOW
+    updaterss:
+      - DEBUG_LOW
+    webhook_testing:
+      - DEBUG_LOW
+    export_database:
+      - DEBUG_HIGH
+    test_portainer_login:
+      - DEBUG_HIGH
+    kill_wikicomma_container:
+      - DEBUG_HIGH
+    start_wikicomma_container:
+      - DEBUG_HIGH
+    raise_error:
+      - DEBUG_LOW
+    raise_unhandled:
+      - DEBUG_LOW
+    raise_critical_error:
+      - DEBUG_LOW
+    export_pubkey:
+      - MANAGE_BACKUPS
+    force_end_backup:
+      - DEBUG_HIGH
+    make_all_snapshots:
+      - DEBUG_HIGH
+    extract_snapshots:
+      - DEBUG_HIGH
+    normalize_links:
+      - DEBUG_HIGH
+    compare_sitemap:
+      - MANAGE_ARTICLE_ALL
+    drop_views:
+      - DEBUG_HIGH
+  RssPageController:
+    rss_changes:
+      - ACCESS_RSS
+    ignore_update:
+      - ACCESS_RSS
+    refresh:
+      - ACCESS_RSS
+  UserController:
+    add_user:
+      - MANAGE_USERS
+    edit_user:
+      - MANAGE_USERS
+    delete_user:
+      - MANAGE_USERS
+    grant_admin_perms:
+      - MASTER_ADMIN
+    revoke_admin_perms:
+      - MASTER_ADMIN
