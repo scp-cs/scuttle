@@ -52,3 +52,43 @@ Properties:
 - `name` - The name of the role...
 - `point_limit` - The minimum amount of points required to achieve this role. Must be unique across all roles
 - `badge_css` - The CSS classes that will be added to the role badge for this role, Tailwind is configured to search this file so you may use Tailwind classes, but you may have to run `tailwindcss` again if the class has not been included in the processed CSS files yet
+
+# acl.yaml
+
+The Access Control Lists. Here you can set which permissions are required to access which parts of SCUTTLE. It contains sensible defaults, and adding arbitrary roles is not supported yet, so you probably won't need to modify it unless you're modifying the access control module itself.
+
+The top level key must always be `lists`, the rest of the file is formatted as follows:
+
+```yaml
+lists:
+  ControllerName:
+    route_function_name:
+      - ROLE
+    route_fn_2:
+      - ROLE1
+      - ROLE2
+```
+
+The following roles are available:
+- ADMIN
+  - General administrator tasks, expands into a couple of different roles
+- MASTER_ADMIN
+  - The system operator, bypasses all other permission checks and cannot be revoked once granted
+- MANAGE_ARTICLE_SELF
+  - Allows modifying metadata for the user's own articles
+- MANAGE_ARTICLE_ALL
+  - Allows modifying metadata for all articles
+- MANAGE_USERS
+  - Allows adding/editing/modifying users
+- VIEW_BACKUPS
+  - Allows viewing the backup archive and downloading files from it
+- MANAGE_BACKUPS
+  - Allows reconfiguring WikiComma, starting a backup and deleting old backup archives
+- ACCESS_RSS
+  - Allows viewing the "New pages" list and adding articles from it
+- API
+  - Allows creating/deleting API keys and using the API
+- DEBUG_LOW
+  - Allows safe debug operations
+- DEBUG_HIGH
+  - Allows potentially unsafe debug operations and granting some of the other roles to users
