@@ -29,12 +29,17 @@ class UserPermission(IntFlag):
     API = 2048                  # Create API keys
 
 _IMPLICIT_PERMISSION = {
-                        UserPermission.ADMIN: UserPermission.MANAGE_ARTICLE_ALL | UserPermission.MANAGE_USERS\
-                              | UserPermission.VIEW_BACKUPS | UserPermission.ACCESS_RSS,
-                        UserPermission.MANAGE_ARTICLE_ALL: UserPermission.MANAGE_ARTICLE_SELF,
-                        UserPermission.DEBUG_HIGH: UserPermission.DEBUG_LOW,
-                        UserPermission.MANAGE_BACKUPS: UserPermission.VIEW_BACKUPS,
-                        }
+    UserPermission.ADMIN: UserPermission.MANAGE_ARTICLE_ALL | UserPermission.MANAGE_USERS\
+            | UserPermission.VIEW_BACKUPS | UserPermission.ACCESS_RSS,
+    UserPermission.MANAGE_ARTICLE_ALL: UserPermission.MANAGE_ARTICLE_SELF,
+    UserPermission.DEBUG_HIGH: UserPermission.DEBUG_LOW,
+    UserPermission.MANAGE_BACKUPS: UserPermission.VIEW_BACKUPS,
+}
+
+_CAN_ALTER_PERMISSION = {
+    UserPermission.ADMIN: UserPermission.MANAGE_ARTICLE_SELF | UserPermission.VIEW_BACKUPS | UserPermission.ACCESS_RSS,
+    UserPermission.DEBUG_HIGH: UserPermission.MANAGE_ARTICLE_SELF | UserPermission.VIEW_BACKUPS | UserPermission.API | UserPermission.ACCESS_RSS | UserPermission.DEBUG_LOW
+}
 
 class ACLManager:
 
@@ -115,8 +120,9 @@ class ACLManager:
 
     @staticmethod
     def _expand_permissions(perms: UserPermission) -> UserPermission:
-        for permission in perms:
-            perms |= _IMPLICIT_PERMISSION.get(permission, 0)
+        for _ in range(3):
+            for permission in perms:
+                perms |= _IMPLICIT_PERMISSION.get(permission, 0)
         return perms
 
     @staticmethod
@@ -134,3 +140,13 @@ class ACLManager:
             return True
 
         return perm in perm_flags
+
+    @staticmethod
+    def can_alter_perms(user_perms: UserPermission, target_perms: UserPermission):
+        if UserPermission.MASTER_ADMIN in user_perms:
+            return True
+        allowlist = UserPermission(0)
+        for p in user_perms:
+            if allow := _CAN_ALTER_PERMISSION.get(p, None):
+                allowlist ^= allow
+        return target_perms in allowlist
