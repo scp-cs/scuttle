@@ -168,7 +168,7 @@ def edit_permissions(uid: int):
     if not form.validate_and_flash():
         return redirect(url_for('UserController.edit_permissions', uid=uid))
 
-    new_perms = ACLManager._expand_permissions(UserPermission(reduce(lambda x, y: x | y, form.perms.data)))
+    new_perms = ACLManager._expand_permissions(UserPermission(reduce(lambda x, y: x | y, form.perms.data))) if form.perms.data else 0
     perm_diff = perms ^ new_perms
 
     if not perm_diff:
