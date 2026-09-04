@@ -4,8 +4,8 @@ const pickerWindow = document.getElementById('picker-window')
 const pickerOverlay = document.getElementById('picker-overlay')
 
 const uid = window.location.pathname.split('/').at(-1)
-const typeID = {translation: 1, correction: 2, original: 3}
-const sortID = {az: 1, latest: 2, words: 3}
+const typeID = Object.freeze({translation: 1, correction: 2, original: 3})
+const sortID = Object.freeze({az: 1, latest: 2, words: 3})
 
 let isOriginal = true
 let timeoutID = 0

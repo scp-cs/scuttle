@@ -155,35 +155,76 @@ def revoke_admin_perms(uid: int):
 @UserController.route('/user/<int:uid>/permissions', methods=["GET", "POST"])
 @login_required
 def edit_permissions(uid: int):
+    # Check that the user is valid
     user = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
+
+    # Just bail if the user is the master admin
     if user.permissions & UserPermission.MASTER_ADMIN:
         flash("Oprávnění tohoto uživatele nelze upravovat")
         return redirect(url_for('UserController.user', uid=uid))
+
+    # Expand the permissions and create our form
     perms = ACLManager._expand_permissions(UserPermission(user.permissions))
     form = PermissionEditForm()
     if request.method == "GET":
         form.perms.data = list(perms)
-        return render_template('auth/permissions.j2', form=form)
+        form.allow_login.data = user.password is not None
+        return render_template('auth/permissions.j2', form=form, user=user)
 
+    # Validate the form
     if not form.validate_and_flash():
         return redirect(url_for('UserController.edit_permissions', uid=uid))
 
+    changed = False
+    redirect_to_temp_pw = False
+
+    # Create a UserPermission object from the new permissions, then compare the changes
     new_perms = ACLManager._expand_permissions(UserPermission(reduce(lambda x, y: x | y, form.perms.data))) if form.perms.data else 0
     perm_diff = perms ^ new_perms
 
-    if not perm_diff:
-        flash("Nebyly provedeny žádné změny")
-        return redirect(url_for('UserController.user', uid=uid))
-
     current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
 
-    if not ACLManager.can_alter_perms(current_user_perms, perm_diff):
-        warning(f"Permission change {user.permissions} => {new_perms} rejected. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
+    # Don't trust the bool coercion enough to just do !=
+    if bool(user.password) != bool(form.allow_login.data) and\
+        (UserPermission.MANAGE_USERS not in current_user_perms and UserPermission.MASTER_ADMIN not in current_user_perms):
+
+        warning(f"{"Activation" if not user.password else "Deactivation"} of user account rejected. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
         flash("Na provedení této operace nemáte oprávnění")
         return redirect(url_for('UserController.user', uid=uid))
 
-    user.permissions = new_perms
+    # No need to do anything else if we haven't changed anything
+    if perm_diff:
+        changed = True
+        # Check that the user requesting the change is actually authorized to do it
+        
+        if not ACLManager.can_alter_perms(current_user_perms, perm_diff):
+            warning(f"Permission change {user.permissions} => {new_perms} rejected. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
+            flash("Na provedení této operace nemáte oprávnění")
+            return redirect(url_for('UserController.user', uid=uid))
+
+        user.permissions = new_perms
+        info(f"Permission change {user.permissions} => {new_perms} accepted. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
+
+    # If we're activating the account, generate a random password
+    if form.allow_login.data and user.password is None:
+        changed = redirect_to_temp_pw = True
+        temp_pw = token_urlsafe(8)
+        user.password = pw_hash(temp_pw)
+        session['tpw'] = temp_pw
+        session['tmp_uid'] = user.get_id()
+        info(f"Activated user account for {user.nickname} (ID: {user.id}), login is now allowed")
+    elif not form.allow_login.data and user.password is not None:
+        changed = True
+        user.password = None
+        info(f"Deactivated user account for {user.nickname} (ID: {user.id}), login is now disallowed")
+
+    if not changed:
+        flash("Nebyly provedeny žádné změny")
+        return redirect(url_for('UserController.user', uid=uid))
+
     user.save()
-    flash("Oprávnění aktualizována")
-    info(f"Permission change {user.permissions} => {new_perms} accepted. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
-    return redirect(url_for('UserController.user', uid=uid))
+    if not redirect_to_temp_pw:
+        flash("Oprávnění aktualizována")
+        return redirect(url_for('UserController.user', uid=uid))
+    else:
+        return redirect(url_for('AuthController.temp_pw'))

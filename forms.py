@@ -97,4 +97,5 @@ class PermissionEditForm(FlaskFormEx):
             coerce=int,
             widget=ListWidget(prefix_label=False),
             option_widget=CheckboxInput())
+    allow_login = BooleanField("Povolit přihlášení", description="Povolí přihlášení do systému pomocí hesla nebo Discord účtu. Po aktivaci bude vygenerováno nové heslo.")
     submit = SubmitField('Potvrdit')

@@ -2,22 +2,39 @@
 
 {% block content %}
 <div class="w-full h-full flex flex-col items-center justify-center">
+  <h1 class="text-3xl font-bold mb-6">Oprávnění uživatele {{user.nickname}}</h1>
+
   <form method="post" class="flex flex-col items-center">
     {{ form.hidden_tag() }}
-    <div class="p-4 grid grid-flow-col grid-cols-2 grid-rows-6 gap-6 border border-white/50 rounded-lg mb-3 backdrop-blur-sm">
+    <div class="p-4 grid grid-flow-col grid-cols-2 grid-rows-6 gap-3 border-white/50 rounded-lg mb-3 backdrop-blur-sm">
       {% for p in form.perms %}
       <div class="permission-container">
       <span>
         {{p(class='peer hidden')}}
-        {{p.label(class='permission-toggle w-56 block')}}
+        {{p.label(class='permission-toggle w-48 block')}}
         </span>
         <p class="ml-10 text-sm">
         {{p.description}}
         </p>
       </div>
       {% endfor %}
+      
     </div>
-    {{form.submit(class='px-4 py-3 bg-white/5 hover:bg-white/20 transition-all border border-white/50 w-min rounded-md')}}
+    <div class="flex flex-col items-center">
+    <div class="permission-container mb-5">
+      <span>
+        {{form.allow_login(class='peer hidden')}}
+        {{form.allow_login.label(class='permission-toggle w-56 block')}}
+        </span>
+        <p class="ml-10 text-sm">
+        {{form.allow_login.description}}
+        </p>
+    </div>
+    <span>
+    {{form.submit(class='px-4 py-1 bg-white/5 hover:bg-white/20 transition-all border border-white/50 w-min rounded-md inline-block mx-1')}}
+    <a class="px-4 py-1 bg-white/5 hover:bg-white/20 transition-all mx-1 border border-white/50 w-min rounded-md inline-block" href="{{url_for('UserController.user', uid=user.id)}}">Zrušit</a>
+    </span>
+    </div>
   </form>
 </div>
 {% endblock content %} 
