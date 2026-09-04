@@ -9,7 +9,7 @@ from flask_login import current_user, login_required
 from urllib.parse import urlparse
 
 # Internal
-from forms import NewArticleForm, EditArticleForm, AssignCorrectionForm
+from forms import NewArticleForm, AssignCorrectionForm
 from framework.roles import get_role, RoleType
 from extensions import rss, webhook
 from db import User, Article, ExtraLink
@@ -51,17 +51,20 @@ def delete_article(aid: int):
 @ArticleController.route('/user/<int:uid>/new_article', methods=["GET", "POST"])
 @login_required
 def add_article(uid):
+    if not (user := User.get_or_none(id=uid)): abort(404)
+
+    form = NewArticleForm()
+    form.translator.data = user.nickname
 
     if request.method == "GET":
-        form = NewArticleForm()
+        
         if request.args.get('rss', None):
             form.title.data = request.args.get('t')
             form.link.data = request.args.get('l')
             session['NEW_FROM_RSS'] = True
             session['RSS_UUID'] = request.args.get('u')
-        return render_template('add_translation.j2', form=form, user=User.get_by_id(uid))
+        return render_template('add_article.j2', form=form, user=user, title="Přidat článek")
     
-    form = NewArticleForm()
     if not form.validate_and_flash():
         return redirect(url_for('ArticleController.add_article', uid=uid))
 
@@ -79,7 +82,7 @@ def add_article(uid):
     article.name = title
     article.words = form.words.data
     article.bonus = form.bonus.data
-    article.author = User.get_by_id(uid)
+    article.author = user
     article.link = normalize_link(form.link.data)
     article.is_original = is_original
     article.excluded = form.excluded.data
@@ -111,9 +114,11 @@ def edit_article(aid: int):
                  'translator': article.author.nickname,
                  'excluded': article.excluded,
                  'international': article.international}
-        return render_template('edit_article.j2', form=EditArticleForm(data=fdata))
+        form=NewArticleForm(data=fdata)
+        form.translator.data = article.author.nickname
+        return render_template('add_article.j2', form=form, title="Upravit článek")
     
-    form = EditArticleForm()
+    form = NewArticleForm()
     if not form.validate_and_flash():
         return redirect(url_for('UserController.user', uid=article.author.get_id()))
 

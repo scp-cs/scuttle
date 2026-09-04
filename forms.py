@@ -48,9 +48,6 @@ class NewArticleForm(FlaskFormEx):
     international = BooleanField('Mezinárodní překlad', default=False)
     submit = SubmitField('Odeslat')
 
-class EditArticleForm(NewArticleForm):
-    pass
-
 class NewUserForm(FlaskFormEx):
     nickname = StringField('Přezdívka', validators=[InputRequired()])
     wikidot = StringField('Wikidot ID', validators=[InputRequired()])
@@ -64,11 +61,6 @@ class EditUserForm(NewUserForm):
     wikidot = StringField('Wikidot ID', validators=[InputRequired()])
     discord = StringField('Discord ID', validators=[DiscordID()])
     submit = SubmitField('Uložit')
-
-class PasswordChangeForm(FlaskFormEx):
-    pw = PasswordField('Heslo', validators=[InputRequired()])
-    pw_confirm = PasswordField('Potvrzení hesla', validators=[InputRequired(), EqualTo('pw', message="Hesla se musí shodovat")])
-    submit = SubmitField('Potvrdit')
 
 class AssignCorrectionForm(FlaskFormEx):
     article_id = HiddenField('id', validators=[NumberRange(0, message="ID musí být číslo")])
