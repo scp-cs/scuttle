@@ -62,6 +62,7 @@ def add_article(uid):
         if request.args.get('rss', None):
             form.title.data = request.args.get('t')
             form.link.data = request.args.get('l')
+            form.international.data = request.args.get('int', False, type=bool)
             session['NEW_FROM_RSS'] = True
             session['RSS_UUID'] = request.args.get('u')
         return render_template('add_article.j2', form=form, user=user, title="Přidat článek")

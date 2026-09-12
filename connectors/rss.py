@@ -9,7 +9,7 @@ from flask import Flask
 from enum import IntEnum
 from typing import Optional
 from collections import deque
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 # Internal
 from db import User, Article, last_update
@@ -18,7 +18,7 @@ from utils import config_has_key
 
 # External
 import feedparser
-from peewee import fn
+from peewee import fn, IntegrityError
 
 # Extract the actual title from the feed's title element
 r_title = re.compile(r"\"(.+)\".+", re.UNICODE)
@@ -26,11 +26,13 @@ r_title = re.compile(r"\"(.+)\".+", re.UNICODE)
 # Extract the author's wikidot username from the HTML formatted description
 r_user = re.compile(r'href="http:\/\/www\.wikidot\.com\/user:info\/(.+?)"', re.UNICODE)
 
+# TODO: Honestly just rewrite this entire thing, probably the shittiest piece of code in the entire app
+
 # TODO: Move this to config, possibly create separate config for RSS feeds
 NEW_PAGE = 'nová stránka'   # This text in the title indicates a new page
+NEW_PAGE_EN = 'new page'
 PAGE_RENAME = 'přesunout/přejmenovat stránku' # This text in the title indicates a page move
 CORRECTION_COMPLETE = 'Odstraněné štítky: korekce'
-IGNORE_BRANCH_TAG = '-cs' # Ignore new pages that start with this tag, doesn't work for tales but I don't really care
 TIMEZONE_UTC_OFFSET = timedelta(hours=2)
 
 class RSSUpdateType(IntEnum):
@@ -40,6 +42,7 @@ class RSSUpdateType(IntEnum):
     RSS_DELETE = 3
     RSS_CORRECTION = 4
     RSS_UNKNOWN = 5
+    RSS_NEWPAGE_INT = 6
 
 @dataclass
 class RSSUpdate:
@@ -61,18 +64,30 @@ class RSSMonitor:
         self.__save_snapshots = False
 
     def init_app(self, app: Flask) -> None:
+        # Just warn and don't do anything else if not configured
         if 'MONITORED_WIKIS' not in app.config:
             warning('RSSMonitor has no endpoints!')
             return
+
+        # Loop over the config key and save the URLs
+        # If snapshots are enabled, also add them to the map
+        # So that we know which folder to save to later
         self.__save_snapshots = config_has_key(app.config, "BACKUP.save_snapshots", check_true=True)
         for wiki in app.config['MONITORED_WIKIS']:
             self.__links.append(wiki['feed_url'])
             if self.__save_snapshots and 'source_wiki' in wiki:
                 wiki_url_base = urlparse(wiki['feed_url']).netloc
                 self.__source_wiki_map[wiki_url_base] = wiki['source_wiki']
+
         if self.__save_snapshots:
             debug(f"Mapped source wikis: {self.__source_wiki_map}")
         self.__webhook = app.config['webhook']
+        self.int_feed_url: str | None = app.config.get('INT_RSS_FEED', None)
+
+        if self.int_feed_url:
+            info("Feed URL for SCP-INT found, RSSMonitor will check for INT translations")
+        else:
+            info("No feed URL provided for SCP-INT, will not check for INT translations")
 
         info(f'Loaded {len(self.__links)} RSSMonitor endpoints from config')
 
@@ -90,12 +105,12 @@ class RSSMonitor:
     
     # Wikidot always converts the username to lowercase and replaces spaces/underscores with dashes for the url slug
     # Makes finding users kinda a pain in the ass
-    def get_rss_update_author(self, update: dict) -> Optional[User]:
+    def get_rss_update_author(self, update: dict) -> User | None:
         update_description = update['description']
         username = r_user.search(update_description).group(1).lower()
         debug(f"Extracted username \"{username}\"")
         user = User.get_or_none(fn.LOWER(User.wikidot) == username) # Spaces and underscores get replaced with dashes in the URL, there's no way around this unfortunately
-        if not user: #! This is going to break if a user has two of these symbols in their name
+        if not user: # ! This is going to break if a user has two of these symbols in their name
             username = username.replace('-', ' ')
             user = User.get_or_none(fn.LOWER(User.wikidot) == username)
         if not user:
@@ -109,7 +124,7 @@ class RSSMonitor:
     # that isn't all HTTPS in 2025, so they tend to get mixed up
     # Using urllib functions for this would be good practice but fuck it tbh
     @staticmethod
-    def find_link(link: str) -> Optional[Article]:
+    def find_link(link: str) -> Article | None:
         article = Article.get_or_none(Article.link == link)
         if article:
             return article
@@ -137,6 +152,78 @@ class RSSMonitor:
     @staticmethod
     def get_update_revision(update: dict) -> int:
         return update['guid'].split('#')[1].removeprefix("revision-")
+
+    def _process_int_update(self, update) -> bool:
+        if update['guid'] in self.__finished_guids:
+            debug(f"Skip GUID {update['guid']}")
+            return False
+
+        self.__finished_guids.append(update['guid'])
+
+        if NEW_PAGE_EN not in update['title']:
+            # We only care about new pages on INT
+            return False
+
+        author = self.get_rss_update_author(update)
+
+        if not author:
+            # Don't have the author in database, nothing to be done
+            return False
+
+        # New page on INT from one of our users, now it's likely to be a translation
+
+        link = update['link']
+        debug("Process INT update with link " + link)
+
+        local_article: Article | None = None
+
+        # Loop over our translation target wikis, try to insert the page slug into each URL
+        # And check whether an article like that exists in our DB
+        for feed_link in self.__links:
+            location = urlparse(feed_link).netloc
+            possible_link = urlunparse(urlparse(link)._replace(netloc=location))
+            debug("Test link: " + possible_link)
+            if (local_article := Article.get_or_none(Article.link == possible_link)):
+                break
+        else:
+            # Loop didn't break, so not found
+            return False
+
+        if Article.get_or_none(Article.link == link):
+            info(f"INT translation of \"{local_article.name}\" already added, discarding update")
+            return False
+
+        timestamp = RSSMonitor.get_rss_update_timestamp(update)
+        title = RSSMonitor.get_rss_update_title(update)
+
+        if local_article.words <= 0:
+            # The original doesn't have a word count set, save it to be added manually
+            info(f"INT translation of \"{local_article.name}\" cannot be added automatically, saving update for manual processing")
+            update = RSSUpdate(timestamp,
+                               link,
+                               title,
+                               author,
+                               uuid4(),
+                               RSSUpdateType.RSS_NEWPAGE_INT)
+            self.__updates.append(update)
+            return True
+        
+        article_model = Article()
+        article_model.international = True
+        article_model.author = author
+        article_model.words = local_article.words
+        article_model.name = title
+        article_model.added = datetime.now()
+        article_model.link = link
+        article_model.bonus = 0
+        article_model.is_original = False
+        try:
+            article_model.save()
+            info(f"Added INT translation of \"{local_article.name}\" from RSS feed")
+            return True
+        except IntegrityError as e:
+            error(f"Database integrity error attempting to add INT translation of \"{local_article.name}\" ({e!r})")
+            return False
 
     def _process_new_page(self, update) -> bool:
         timestamp = RSSMonitor.get_rss_update_timestamp(update)
@@ -192,9 +279,8 @@ class RSSMonitor:
             debug(f"Skip GUID {update['guid']}")
             return False
 
-        if update['guid'] not in self.__finished_guids:
-            debug(f"Add GUID {update['guid']}")
-            self.__finished_guids.append(update['guid'])
+        debug(f"Add GUID {update['guid']}")
+        self.__finished_guids.append(update['guid'])
         update_type = RSSMonitor.get_rss_update_type(update)
         match update_type:
             case RSSUpdateType.RSS_NEWPAGE:
@@ -220,6 +306,17 @@ class RSSMonitor:
                 
             new_count = [self._process_update(u) for u in feed].count(True)
 
+        if self.int_feed_url:
+            try:
+                feed = feedparser.parse(self.int_feed_url).entries
+            except Exception as e:
+                error(f"Failed to fetch/parse INT new pages feed ({e!r})")
+                int_tr_count = 0
+            else:
+                int_tr_count = [self._process_int_update(u) for u in feed].count(True)
+
+        if int_tr_count > 0:
+            info(f"Found {int_tr_count} possible international translations")
         info(f'Got {new_count or "no"} new pages from RSS feeds')
 
     @property
