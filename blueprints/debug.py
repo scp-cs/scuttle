@@ -180,8 +180,8 @@ def extract_snapshots():
         with archive:
             archive.extract(path=snapshot_path, recursive=True, targets=['snapshots'])
     except Exception as e:
-        flash(f"Chyba při extrakci ({str(e)})")
-        error(f"Extraction failed ({str(e)})")
+        flash(f"Chyba při extrakci ({e!r})")
+        error(f"Extraction failed ({e!r})")
     else:
         flash(f"Soubory extrahovány do {snapshot_path}")
         info(f"Files extracted succesfully")
@@ -192,15 +192,16 @@ def extract_snapshots():
 @log_access
 def normalize_links():
     # Removes trailing newlines from all links in the database
+    # Converts all to lowercase
     # And sets the URL scheme to HTTP
     updated_count = 0
     for a in Article.select():
         link: str = a.link
         oldlink = link
-        if not a:
+        if not link:
             warning(f'Link missing for {a.name}')
             continue
-        link = link.removesuffix('\n')
+        link = link.lower().removesuffix('\n')
         parsed = urlparse(link)
         link = parsed._replace(scheme='http').geturl()
         # Only save the new link if it doesn't match the old one
@@ -280,7 +281,7 @@ def new_api_key():
     # Never going to happen 
     if ApiKey.select().where(ApiKey.key == key).exists():
         flash("Běž si vsadit sportku bro")
-        info("Collision when generating API key (wtf)")
+        error("Collision when generating API key (wtf)")
         return redirect(url_for("DebugToolsController.api_settings"))
 
     note = request.form.get('note')
