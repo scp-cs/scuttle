@@ -17,6 +17,7 @@ from connectors.discord import DiscordClient
 from connectors.rss import RSSUpdateType
 from framework.menu import navigation_menu
 from framework.roles import role_badge, get_all_badges, RoleType, role_type_to_points, has_badge
+from framework.accesscontrol import UserPermission
 from utils import ensure_config, config_has_key, DiscordErrorHandler
 from tasks import discord_tasks, backup_task
 from db import User
@@ -82,7 +83,7 @@ def user_init() -> None:
         warning(f"Initial user {init_user} already exists")
         return
     info(f"Adding initial user {init_user}")
-    admin = User.create(nickname=init_user, password=pw_hash(init_password), discord="", wikidot="")
+    admin = User.create(nickname=init_user, password=pw_hash(init_password), discord="", wikidot="", permissions=UserPermission.MASTER_ADMIN)
     # TODO: Do something with this id
 
 def extensions_init() -> None:
