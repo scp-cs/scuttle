@@ -85,7 +85,7 @@ def pw_change():
     if user is None:
         error("Invalid auth state (Temporary PW change in progress but user not found)")
         return redirect(url_for('LeaderboardController.index'))
-    user.password = pw_hash(form.pw.data)
+    user.password = pw_hash(form.password.data)
     user.temp_pw = False
     user.save()
 

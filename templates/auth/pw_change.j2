@@ -10,10 +10,10 @@
 
 <form method="post" class="flex flex-col items-center text-lg">
     {{ form.hidden_tag() }}
-    {{form.pw.label(class='opacity-90 self-start text-sm font-thin')}}
-    {{form.pw(class='input-field mb-4', id='input-title')}}
-    {{form.pw_confirm.label(class='opacity-90 self-start text-sm font-thin')}}
-    {{form.pw_confirm(class='input-field mb-4', id='input-link')}}
+    {{form.password.label(class='opacity-90 self-start text-sm font-thin')}}
+    {{form.password(class='input-field mb-4', id='input-title')}}
+    {{form.password_confirm.label(class='opacity-90 self-start text-sm font-thin')}}
+    {{form.password_confirm(class='input-field mb-4', id='input-link')}}
     {{form.submit(class='w-36 btn-rounded hover:bg-green-500 bg-green-600')}}
 </form>
 
