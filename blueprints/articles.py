@@ -14,6 +14,7 @@ from framework.roles import get_role, RoleType
 from extensions import rss, webhook
 from db import User, Article, ExtraLink
 from utils import is_mainlist_scp
+import peewee
 
 ArticleController = Blueprint('ArticleController', __name__)
 
@@ -71,9 +72,18 @@ def add_article(uid):
     title = form.title.data.upper() if is_mainlist_scp(form.title.data) else form.title.data # Capitalize SCP
     is_original = bool(request.args.get('original', False))
 
-    if Article.select().where(Article.name == title).exists():
-        flash(f'Překlad již existuje! (od uživatele {Article.get(Article.name == title).author.nickname})')
-        return redirect(url_for('ArticleController.add_article', uid=uid))
+    # Call John Python, tell him we found a use case for try-else with an empty except
+    try:
+        existing = Article.get((Article.name == title) | (Article.link == form.link.data))
+    except peewee.DoesNotExist:
+        ...
+    else:
+        # TODO: This will like theoretically break if we have 3 different articles with the same name
+        # But what situation could that possibly happen in
+        # Basically we just prevent the article from being added if the international flag and the type also match
+        if existing.is_original == is_original and existing.international == form.international.data:
+            flash(f'Článek již existuje! (od uživatele {Article.get(Article.name == title).author.nickname})')
+            return redirect(url_for('ArticleController.add_article', uid=uid))       
     
     if current_app.config['WEBHOOK_ENABLE'] and not form.excluded.data:
         check_role_and_notify(uid, form.words.data / 1000 + form.bonus.data, is_original)
