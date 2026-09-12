@@ -260,6 +260,7 @@ if __name__ == '__main__':
 
     # Force oauthlib to allow insecure transport when debugging
     if app.config['DEBUG']:
+        logging.getLogger().setLevel(logging.DEBUG)
         warning('App running in debug mode!')
         env['OAUTHLIB_INSECURE_TRANSPORT'] = 'true'
         warning('OAUTHLIB insecure transport is enabled!')
