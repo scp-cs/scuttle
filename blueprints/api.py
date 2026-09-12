@@ -5,9 +5,9 @@ from datetime import datetime
 import json
 from http import HTTPStatus
 from functools import wraps
+from enum import StrEnum
 from peewee import DoesNotExist, ModelSelect
 import os
-from typing import Any
 
 from db import Article, User, Frontpage, Correction, ExtraLink, ApiKey, Backup
 from framework.roles import role_badge
@@ -16,6 +16,21 @@ from jsonschema import validate
 from jsonschema.exceptions import ValidationError
 
 ApiController = Blueprint('ApiController', __name__)
+
+class ResultSort(StrEnum):
+    ALPHABETICAL = 'az'
+    WORD_COUNT = 'words'
+    LATEST = 'latest'
+
+class ResponseFormat(StrEnum):
+    HTML = 'html'
+    JSON = 'json'
+    RESULT_COUNT = 'count_only'
+
+class ResultType(StrEnum):
+    TRANSLATION = 'translation'
+    ORIGINAL = 'original'
+    CORRECTION = 'correction'
 
 PAGE_ITEMS = 15
 
@@ -35,11 +50,11 @@ def api_auth_required(func):
 
 def sort_article_select_query(query: ModelSelect[Article] | ModelSelect[Correction], sorting: str = 'latest', correction: bool = False):
     match sorting:
-        case 'az':
+        case ResultSort.ALPHABETICAL:
             return query.order_by(Correction.name.collate("NOCASE") if correction else Article.name.collate("NOCASE").asc()).prefetch(User)
-        case 'words':
+        case ResultSort.WORD_COUNT:
             return query.order_by(Correction.words.desc() if correction else Article.words.desc()).prefetch(User)
-        case 'latest':
+        case ResultSort.LATEST:
             return query.order_by(Correction.timestamp.desc() if correction else Article.added.desc()).prefetch(User)
         case _:
             return query.order_by(Correction.timestamp.desc() if correction else Article.added.desc()).prefetch(User)
@@ -70,7 +85,8 @@ def db_search_article(query: str, user_id: int | None = None, original: bool | N
         db_query = db_query.where(Article.is_original == original)
 
     total = db_query.count()
-    db_query = db_query.limit(PAGE_ITEMS).offset(page*PAGE_ITEMS)
+    if page != -1:
+        db_query = db_query.limit(PAGE_ITEMS).offset(page*PAGE_ITEMS)
 
     results = sort_article_select_query(db_query, sorting) if sorting else sort_article_select_query(db_query)
 
@@ -93,11 +109,11 @@ def search_article():
     if not query:
         return result_error("Parameters missing")
     count, results = db_search_article(query, author, original, sorting, page)
-    if format == 'json':
+    if format == ResponseFormat.JSON:
         return result_ok([r.to_dict() for r in results])
-    elif format == 'html':
+    elif format == ResponseFormat.HTML:
         return render_template('partials/article_list.j2', articles=results)
-    elif format == 'count_only':
+    elif format == ResponseFormat.RESULT_COUNT:
         return result_ok({'count': count, 'per_page': PAGE_ITEMS})
     else:
         return result_error("Invalid format")
@@ -105,6 +121,7 @@ def search_article():
 @ApiController.get('/api/search/user')
 def search_user():
     query = request.args.get('q', None, str)
+    format = request.args.get('format', 'json', str)
     if not query:
         return result_error("No query specified")
     param = f'%{query}%'
@@ -147,28 +164,30 @@ def api_get_articles(uid: int):
     resp_format = request.args.get("format", "json", str)
 
     match article_type:
-        case 'translation':
+        case ResultType.TRANSLATION:
             select = Article.select().where((Article.is_original == False) & (Article.author == user))
-        case 'correction':
+        case ResultType.CORRECTION:
             select = Correction.select().where(Correction.corrector == user)
-        case 'original':
+        case ResultType.ORIGINAL:
             select = Article.select().where((Article.is_original == True) & (Article.author == user))
         case _:
             return result_error('Invalid type')
 
     # Count the articles before we offset and limit
     total = select.count()
-    if resp_format == 'count_only':
+    if resp_format == ResponseFormat.RESULT_COUNT:
         return result_ok({'count': total, 'per_page': PAGE_ITEMS})
-    select = select.limit(PAGE_ITEMS).offset(PAGE_ITEMS*page)
+
+    if page != -1:
+        select = select.limit(PAGE_ITEMS).offset(PAGE_ITEMS*page)
 
     select = sort_article_select_query(select, sort, article_type == 'correction')
 
-    if resp_format == 'json':
+    if resp_format == ResponseFormat.JSON:
         return result_ok([r.to_dict() for r in select], {"total": total})
-    elif resp_format == 'html' and article_type != 'correction':
+    elif resp_format == ResponseFormat.HTML and article_type != ResultType.CORRECTION:
         return render_template('partials/article_list.j2', articles=select)
-    elif resp_format == 'html' and article_type == 'correction':
+    elif resp_format == ResponseFormat.HTML and article_type == ResultType.CORRECTION:
         return render_template('partials/correction_list.j2', corrections=select)
     else:
         return result_error("Invalid format parameter")
