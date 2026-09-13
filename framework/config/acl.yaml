@@ -82,7 +82,5 @@ lists:
       - MANAGE_USERS
     delete_user:
       - MANAGE_USERS
-    grant_admin_perms:
-      - MASTER_ADMIN
-    revoke_admin_perms:
-      - MASTER_ADMIN
+    edit_permissions:
+      - MANAGE_USERS
