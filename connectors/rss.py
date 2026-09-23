@@ -24,7 +24,7 @@ from peewee import fn, IntegrityError
 r_title = re.compile(r"\"(.+)\".+", re.UNICODE)
 
 # Extract the author's wikidot username from the HTML formatted description
-r_user = re.compile(r'href="http:\/\/www\.wikidot\.com\/user:info\/(.+?)"', re.UNICODE)
+r_user = re.compile(r'href="https:\/\/www\.wikidot\.com\/user:info\/(.+?)"', re.UNICODE)
 
 # TODO: Honestly just rewrite this entire thing, probably the shittiest piece of code in the entire app
 

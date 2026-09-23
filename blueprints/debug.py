@@ -225,7 +225,7 @@ def compare_sitemap():
     links = []
 
     for wiki in wikis:
-        sitemap_url = f"http://{wiki}.wikidot.com/sitemap.xml"
+        sitemap_url = f"https://{wiki}.wikidot.com/sitemap.xml"
         sitemap_fetch = requests.get(sitemap_url)
         if(sitemap_fetch.status_code != HTTPStatus.OK):
             error(f"Fetch sitemap failed for {wiki}")

@@ -21,7 +21,7 @@ ArticleController = Blueprint('ArticleController', __name__)
 def normalize_link(link: str) -> str:
     newlink = link.removesuffix('\n')
     parsed = urlparse(newlink)
-    newlink = parsed._replace(scheme='http').geturl()
+    newlink = parsed._replace(scheme='https').geturl()
     return newlink
 
 def check_role_and_notify(uid: int, point_amount: float, original: bool):
