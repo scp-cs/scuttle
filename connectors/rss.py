@@ -107,7 +107,11 @@ class RSSMonitor:
     # Makes finding users kinda a pain in the ass
     def get_rss_update_author(self, update: dict) -> User | None:
         update_description = update['description']
-        username = r_user.search(update_description).group(1).lower()
+        username_match = r_user.search(update_description)
+        if not username_match:
+            error(f"Username regex did not match, source update is: {update}")
+            return None
+        username = username_match.group(1).lower()
         debug(f"Extracted username \"{username}\"")
         user = User.get_or_none(fn.LOWER(User.wikidot) == username) # Spaces and underscores get replaced with dashes in the URL, there's no way around this unfortunately
         if not user: # ! This is going to break if a user has two of these symbols in their name
