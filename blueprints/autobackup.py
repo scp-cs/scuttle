@@ -54,7 +54,7 @@ def setup_backup_route(setup_state):
     setup_state.app.add_url_rule('/backup/start', view_func=login_required(backup))
 
 def wikicomma_watchdog_thread():
-    info("WikiComma watchdog thread started")
+    info("[WATCHDOG] WikiComma watchdog thread started")
     while True:
         sleep(30)
         finish_lock.acquire()
@@ -62,11 +62,10 @@ def wikicomma_watchdog_thread():
         if not status.running:
             finish_lock.release()
             if Backup.get_or_none(Backup.is_finished == False) is not None:
-                error("WikiComma container died, marking backup as finished and sending alert")
-                webhook.send_text("Chyba zálohy: WikiComma kontejner byl neočekávaně ukončen. Zkontrolujte protokol.")
+                error("[WATCHDOG] WikiComma container died, marking backup as finished and sending alert")
                 break
             else:
-                info("Backup has been finished, terminating watchdog thread")
+                info("[WATCHDOG] Backup has been finished, terminating watchdog thread")
                 break
         finish_lock.release()
 
