@@ -4,7 +4,8 @@ from logging import warning, info, error, debug
 from dataclasses import dataclass
 from typing import List, Dict
 from jsonschema import validate
-from threading import Lock
+from threading import Lock, Thread
+from time import sleep
 from datetime import datetime, timedelta
 import textwrap
 
@@ -43,6 +44,7 @@ class StatusMutex:
     status: BackupStatus
 
 statuses: Dict[str, StatusMutex] = {}
+finish_lock = Lock()
 
 AutobackupController = Blueprint("AutobackupController", __name__)
 
@@ -51,13 +53,33 @@ AutobackupController = Blueprint("AutobackupController", __name__)
 def setup_backup_route(setup_state):
     setup_state.app.add_url_rule('/backup/start', view_func=login_required(backup))
 
+def wikicomma_watchdog_thread():
+    info("WikiComma watchdog thread started")
+    while True:
+        sleep(30)
+        finish_lock.acquire()
+        status = portainer.container_status()
+        if not status.running:
+            finish_lock.release()
+            if Backup.get_or_none(Backup.is_finished == False) is not None:
+                error("WikiComma container died, marking backup as finished and sending alert")
+                webhook.send_text("Chyba zálohy: WikiComma kontejner byl neočekávaně ukončen. Zkontrolujte protokol.")
+                break
+            else:
+                info("Backup has been finished, terminating watchdog thread")
+                break
+        finish_lock.release()
+
+
 def finish_backup():
+    finish_lock.acquire()
     if Backup.get_or_none(Backup.is_finished == False) is None:
         # Don't think that this can actually happen but it's better to handle it regardless
         error("No backups to finish!")
         # If it does happen then I messed up somehow
         # TODO: Remove this at some point
         webhook.send_text("Unexpected state encountered while finishing backup (definitely a bug), please review application logs")
+        finish_lock.release()
         return
 
     snapshot_count = 0
@@ -81,6 +103,7 @@ def finish_backup():
         webhook.send_text("```Záloha selhala (nepodařilo se vytvořit archiv)```")
         statuses.clear()
         # The backup will stil be marked as "in-progress" here, the status has to be cleared on the devtools page
+        finish_lock.release()
         return
     else:
         # Don't know what the purpose of the else block is here but scared to change it
@@ -130,6 +153,7 @@ def finish_backup():
     statuses.clear()
     Backup.update(is_finished=True, 
                   article_count=status.finished_articles).where(Backup.is_finished == False).execute()
+    finish_lock.release()
 
 @AutobackupController.route('/backups', methods=["GET"])
 @login_required
@@ -362,6 +386,10 @@ def backup():
             error(f"Couldn't start container, stopping backup ({str(e)})")
             backup.delete_instance()
             return "Chyba: Kontejner nelze spustit", 500
+        else:
+            wd_thread_handle = Thread(target=wikicomma_watchdog_thread)
+            wd_thread_handle.daemon = True
+            wd_thread_handle.start()
     else:
         try:
             info(f"Running command: {start_command}")

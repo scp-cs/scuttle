@@ -2,6 +2,8 @@ from flask import Flask
 from logging import debug, info, warning, error
 from functools import wraps
 from http import HTTPStatus
+from enum import StrEnum
+from dataclasses import dataclass
 import requests
 import urllib.parse
 
@@ -11,6 +13,19 @@ class PortainerError(Exception): pass
 class InvalidConfigError(PortainerError): pass
 class InvalidCredentialsError(PortainerError): pass
 class ServerError(PortainerError): pass
+
+class HTTPMethod(StrEnum):
+    POST = 'post'
+    GET = 'get'
+    PUT = 'put'
+    DELETE = 'delete'
+    HEAD = 'head'
+
+@dataclass
+class ContainerStatus:
+    exit_code: int
+    error_str: str
+    running: bool
 
 class PortainerConnector():
     """
@@ -150,10 +165,23 @@ class PortainerConnector():
 
         return json[0]['Id']
 
-    def __container_action(self, action: str):
+    def __container_action(self, action: str, *, method: HTTPMethod = HTTPMethod.POST):
         container_id = self.__find_container()
         query_url = self.url+f'/endpoints/{self.__env_id}/docker/containers/{container_id}/{action}'
-        return requests.post(query_url, headers={"Authorization": f"Bearer {self._jwt}"})
+        headers={"Authorization": f"Bearer {self._jwt}"}
+        match method:
+            case HTTPMethod.POST:
+                return requests.post(query_url, headers=headers)
+            case HTTPMethod.GET:
+                return requests.get(query_url, headers=headers)
+            case HTTPMethod.DELETE:
+                return requests.delete(query_url, headers=headers)
+            case HTTPMethod.PUT:
+                return requests.put(query_url, headers=headers)
+            case HTTPMethod.HEAD:
+                return requests.head(query_url, headers=headers)
+            case _:
+                raise PortainerError("Invalid HTTP method")
 
     @requires_auth
     def start_container(self):
@@ -213,6 +241,14 @@ class PortainerConnector():
             case HTTPStatus.INTERNAL_SERVER_ERROR:
                 error("Couldn't restart container")
                 raise PortainerError("Couldn't restart container, server error")
+
+    @requires_auth
+    def container_status(self) -> ContainerStatus:
+        response = self.__container_action('json', method = HTTPMethod.GET)
+        json_data = response.json()
+        return ContainerStatus(json_data['State']['ExitCode'],
+                               json_data['State']['Error'],
+                               json_data['State']['Running'])
     
     @requires_auth
     def wait_for_exit(self) -> int:
