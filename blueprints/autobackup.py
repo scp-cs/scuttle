@@ -62,7 +62,10 @@ def wikicomma_watchdog_thread():
         if not status.running:
             finish_lock.release()
             if Backup.get_or_none(Backup.is_finished == False) is not None:
-                error("[WATCHDOG] WikiComma container died, marking backup as finished and sending alert")
+                statuses.clear()
+                Backup.update(is_finished=True, 
+                                article_count=status.finished_articles).where(Backup.is_finished == False).execute()
+                error("[WATCHDOG] WikiComma container died, cleaning up state and marking backup as finished")
                 break
             else:
                 info("[WATCHDOG] Backup has been finished, terminating watchdog thread")
