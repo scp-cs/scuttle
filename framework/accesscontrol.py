@@ -3,15 +3,16 @@ from enum import IntFlag
 from functools import wraps
 from typing import cast
 from logging import info, error, critical
+from http import HTTPStatus
 import os
 
 # External
 from flask_login import current_user
-from flask import abort, request, Flask
+from flask import abort, request, Flask, flash
 import yaml
 
 # Internal
-from db import User
+from db import User, Article
 from .framework import FrameworkError
 
 class UserPermission(IntFlag):
@@ -40,6 +41,20 @@ _CAN_ALTER_PERMISSION = {
     UserPermission.ADMIN: UserPermission.MANAGE_ARTICLE_SELF | UserPermission.VIEW_BACKUPS | UserPermission.ACCESS_RSS,
     UserPermission.DEBUG_HIGH: UserPermission.MANAGE_ARTICLE_SELF | UserPermission.VIEW_BACKUPS | UserPermission.API | UserPermission.ACCESS_RSS | UserPermission.DEBUG_LOW
 }
+
+def check_perms_for_article(aid: int):
+    article: Article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)
+    current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
+    if article.author.id != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
+        flash("Na tuto akci nemáte oprávnění")
+        abort(HTTPStatus.FORBIDDEN)
+
+def check_perms_for_user(uid: int):
+    if not (user := User.get_or_none(id=uid)): abort(404)
+    current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
+    if user.get_id() != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
+        flash("Na tuto akci nemáte oprávnění")
+        abort(HTTPStatus.FORBIDDEN)
 
 class ACLManager:
 

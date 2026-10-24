@@ -11,6 +11,7 @@ import os
 
 from db import Article, User, Frontpage, Correction, ExtraLink, ApiKey, Backup
 from framework.roles import role_badge
+from framework.accesscontrol import check_perms_for_article
 from framework.api.schemas.extra_link_schema import extra_link_schema, link_remove_schema
 from jsonschema import validate
 from jsonschema.exceptions import ValidationError
@@ -196,9 +197,11 @@ def api_get_articles(uid: int):
 @login_required
 def assign_correction(uid: int):
     article_id = request.form.get('aid', None, int)
+    
     if not article_id:
         flash('Neplatný článek')
         return result_error('Neplatný článek')
+    check_perms_for_article(article_id)
     article = Article.get_or_none(Article.id == article_id)
     if not article:
         flash('Neplatný článek')
@@ -219,9 +222,11 @@ def assign_correction(uid: int):
 def remove_correction(aid: int):
 
     article = Article.get_or_none(Article.id == aid)
+    
     if not article:
         flash('Neplatný článek')
         return result_error('Neplatný článek')
+    check_perms_for_article(article.id)
 
     article.corrected = None
     article.corrector = None
@@ -233,9 +238,11 @@ def remove_correction(aid: int):
 @login_required
 def add_extra_link(aid: int):
     article = Article.get_or_none(Article.id == aid)
+    
     if not article:
         flash('Neplatný článek')
         return result_error('Invalid article ID')
+    check_perms_for_article(article.id)
     
     try:
         data = json.loads(request.data)
@@ -269,6 +276,7 @@ def remove_extra_link(aid: int):
     if not article:
         flash('Neplatný článek')
         return result_error('Neplatný článek')
+    check_perms_for_article(article.id)
     
     try:
         data = json.loads(request.data)

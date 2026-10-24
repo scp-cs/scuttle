@@ -14,22 +14,10 @@ from framework.roles import get_role, RoleType
 from extensions import rss, webhook
 from db import User, Article, ExtraLink
 from utils import is_mainlist_scp
-from framework.accesscontrol import ACLManager, UserPermission
+from framework.accesscontrol import check_perms_for_article, check_perms_for_user
 import peewee
 
 ArticleController = Blueprint('ArticleController', __name__)
-
-def check_perms_for_article(aid: int):
-    article: Article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)
-    current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
-    if article.author.id != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
-        abort(HTTPStatus.FORBIDDEN)
-
-def check_perms_for_user(uid: int):
-    if not (user := User.get_or_none(id=uid)): abort(404)
-    current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
-    if user.get_id() != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
-        abort(HTTPStatus.FORBIDDEN)
 
 def normalize_link(link: str) -> str:
     newlink = link.removesuffix('\n')
