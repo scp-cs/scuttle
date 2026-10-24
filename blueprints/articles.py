@@ -14,9 +14,22 @@ from framework.roles import get_role, RoleType
 from extensions import rss, webhook
 from db import User, Article, ExtraLink
 from utils import is_mainlist_scp
+from framework.accesscontrol import ACLManager, UserPermission
 import peewee
 
 ArticleController = Blueprint('ArticleController', __name__)
+
+def check_perms_for_article(aid: int):
+    article: Article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)
+    current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
+    if article.author.id != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
+        abort(HTTPStatus.FORBIDDEN)
+
+def check_perms_for_user(uid: int):
+    if not (user := User.get_or_none(id=uid)): abort(404)
+    current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
+    if user.get_id() != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
+        abort(HTTPStatus.FORBIDDEN)
 
 def normalize_link(link: str) -> str:
     newlink = link.removesuffix('\n')
@@ -44,6 +57,7 @@ def check_role_and_notify(uid: int, point_amount: float, original: bool):
 @login_required
 def delete_article(aid: int):
     article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)
+    check_perms_for_article(aid)
     article.delete_instance()
     info(f"Article {article.name} deleted by {current_user.nickname} (ID: {current_user.get_id()})")
     flash(f'Článek {article.name} smazán')
@@ -53,6 +67,7 @@ def delete_article(aid: int):
 @login_required
 def add_article(uid):
     if not (user := User.get_or_none(id=uid)): abort(404)
+    check_perms_for_user(uid)
 
     form = NewArticleForm()
     form.translator.data = user.nickname
@@ -115,7 +130,8 @@ def add_article(uid):
 @login_required
 def edit_article(aid: int):
 
-    article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)        
+    article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)
+    check_perms_for_article(aid)       
 
     if request.method == "GET":
         fdata = {'title': article.name,
@@ -158,6 +174,7 @@ def assign_correction():
     form = AssignCorrectionForm()
     back_to_changes = redirect(url_for('RssPageController.rss_changes'))
     article = Article.get_or_none(Article.id == form.article_id.data)
+    check_perms_for_article(article.id)
     if not article:
         return back_to_changes
 
@@ -185,6 +202,7 @@ def assign_link():
     form = AssignCorrectionForm()
     back_to_changes = redirect(url_for('RssPageController.rss_changes'))
     article = Article.get_or_none(Article.id == form.article_id.data)
+    check_perms_for_article(article.id)
     if not article:
         return back_to_changes
 
