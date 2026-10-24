@@ -184,9 +184,9 @@ function addPickerItem(row) {
     let authorLink = $("<a>", {
         class: "underline",
         href: `/user/${row.author.id}`,
-        text: row.author.name})
+        text: row.author.nickname})
     newRow.find('#result-author').append(authorLink)
-    newRow.find('#result-corrector').text(row.corrector.name)
+    newRow.find('#result-corrector').text(row.corrector ? row.corrector.nickname : "N/A")
     newRow.find('#btn-pick').on('click', () => bindCorrection(row.id))
     $('#result-table-body').append(newRow)
 }
