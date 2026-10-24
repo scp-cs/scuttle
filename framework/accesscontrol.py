@@ -43,13 +43,17 @@ _CAN_ALTER_PERMISSION = {
 }
 
 def check_perms_for_article(aid: int):
+    if UserPermission.MASTER_ADMIN in UserPermission(current_user.permissions):
+        return
     article: Article = Article.get_or_none(Article.id == aid) or abort(HTTPStatus.NOT_FOUND)
     current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
-    if article.author.id != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
+    if article.author.get_id() != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
         flash("Na tuto akci nemáte oprávnění")
         abort(HTTPStatus.FORBIDDEN)
 
 def check_perms_for_user(uid: int):
+    if UserPermission.MASTER_ADMIN in UserPermission(current_user.permissions):
+            return
     if not (user := User.get_or_none(id=uid)): abort(404)
     current_user_perms = ACLManager._expand_permissions(UserPermission(current_user.permissions))
     if user.get_id() != current_user.get_id() and UserPermission.MANAGE_ARTICLE_ALL not in current_user_perms:
