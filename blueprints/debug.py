@@ -7,16 +7,18 @@ from datetime import datetime
 from functools import wraps
 import os
 import py7zr
-import io
 import requests
 from lxml import etree
 from os import path, getcwd
-from urllib.parse import urlparse, urlunparse
+from urllib.parse import urlparse
 from secrets import token_urlsafe
+from constants import APP_VERSION
+from utils import config_has_key
 
 from connectors.wikidotsite import snapshot_all
 from connectors.portainer import PortainerError
-from extensions import sched, webhook, portainer
+from extensions import sched, webhook, portainer, rss, acl, oauth
+from framework.roles import role_cache
 from db import database, create_views
 
 DebugToolsController = Blueprint('DebugToolsController', __name__)
@@ -323,4 +325,85 @@ def drop_views():
     create_views(database)
     flash("SQLite pohledy byly znovu vytvořeny. Je doporučeno restartovat aplikaci.")
     return redirect(url_for('DebugToolsController.debug_index'))
+
+# TODO: Too long, move it elsewhere
+@DebugToolsController.route('/debug/selftest')
+@login_required
+def run_selftest():
+    MARK_OK = '[ OK ]'
+    MARK_FAIL = '[ FAIL ]'
+    temp_file_path = path.join(getcwd(), 'temp', 'selftest.txt')
+    logfile = open(temp_file_path, 'w')
+    logfile.write(10*'=' + f' SCUTTLE VERSION {APP_VERSION} SELF-TEST REPORT ' + 10*'=' + '\n\n')
+
+    def check(cond, ok_msg, fail_msg):
+        if cond:
+            logfile.write(f'{MARK_OK}{4*' '} {ok_msg}\n')
+        else:
+            logfile.write(f'{MARK_FAIL}{2*' '} {fail_msg}\n')
+
+    check(urlparse(request.base_url).scheme == 'https',
+          "Site is being served over HTTPS",
+          "Site is being served over insecure HTTP")
     
+    check(User.select().where(User.permissions.bin_or(1) == 1).exists(),
+          "Master admin account exists",
+          "Master admin account missing")
+
+    check(sched.running,
+          "Scheduler is running",
+          "Scheduler is stopped")
+
+    check(rss.has_links,
+          "RSSMonitor is set up",
+          "RSSMonitor is not set to a feed")
+
+    check(acl._lists and len(acl._lists) > 0,
+          "Access control lists are present",
+          "Access control listts are missing")
+
+    # TODO: fix
+    check(role_cache and len(role_cache) > 0,
+          "Member roles are configured",
+          "Member roles are not configured")
+
+    if config_has_key(current_app.config, "DISCORD.REDIRECT_URI"):
+        cfg_netloc = urlparse(current_app.config.get('DISCORD')['REDIRECT_URI']).netloc
+        current_netloc = urlparse(request.base_url).netloc
+        check(cfg_netloc == current_netloc,
+              "OAuth redirect URI matches current hostname",
+              "OAuth redirect URI doesn't match current hostname")
+
+    if portainer._initialized:
+        try:
+            portainer.login()
+        except Exception:
+            logfile.write(f'{MARK_FAIL}{2*' '} Portainer login fails\n')
+        else:
+            logfile.write(f'{MARK_OK}{4*' '} Portainer login succeeds\n')
+        try:
+            portainer._PortainerConnector__find_container()
+        except Exception:
+            logfile.write(f'{MARK_FAIL}{2*' '} WikiComma container name is invalid\n')
+        else:
+            logfile.write(f'{MARK_OK}{4*' '} WikiComma container name is valid\n')
+
+    if webhook.is_initialized():
+        check(webhook.check_webhook(),
+              "Webhook URL is valid",
+              "Webhook URL is invalid")
+
+    from blueprints.embed import writer_themes_installed, translator_themes_installed
+
+    check(len(writer_themes_installed) > 0,
+          "At least one writer badge theme is installed",
+          "No writer badge themes found")
+
+    check(len(translator_themes_installed) > 0,
+          "At least one translator badge theme is installed",
+          "No translator badge themes found")
+
+    logfile.write('\n' + 61*'=')
+    logfile.close()
+    return send_file(temp_file_path, download_name="selftest.txt", as_attachment=True)
+

@@ -144,11 +144,23 @@ class DiscordWebhook():
         self.url = url
         self.notify = notify
 
+    def is_initialized(self) -> bool:
+        return bool(self.url)
+
     def init_app(self, app):
         self.url = app.config['WEBHOOK']['WEBHOOK_URL']
         self.notify = app.config['DISCORD_ROLEMASTER_ID']
         self.mock = app.config.get("DEBUG_DISABLE_WEBHOOKS", False) and app.config.get("DEBUG", False)
         self.debug = app.config.get("DEBUG", False)
+
+    def check_webhook(self) -> bool:
+        if not self.url:
+            return False
+        try:
+            resp = requests.get(self.url)
+            return resp.status_code == 200
+        except Exception:
+            return False
 
     def send_text(self, message: str, ping_user: int = 0, files: t.List[t.Tuple[str, str]] = []) -> None:
         if not self.url:
