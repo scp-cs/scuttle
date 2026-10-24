@@ -13,7 +13,7 @@
 <div class="flex flex-col p-10 mx-10 my-4 bg-white border shadow-2xl border-slate-900 bg-opacity-5 rounded-xl backdrop-blur-sm">
     <span>
     <h1 class="mb-2 text-4xl font-bold">{{user.nickname}} 
-      {% if user.password %}
+      {% if admin %}
         <i class="bi bi-shield-fill text-green-600 text-2xl ml-2 inline" title="Administrátor"></i>
       {% endif %}</h1>        
     </span>

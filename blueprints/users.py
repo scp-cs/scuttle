@@ -9,6 +9,7 @@ from crypto import pw_hash
 from tasks import discord_tasks
 from secrets import token_urlsafe
 from functools import reduce
+from typing import cast
 
 from extensions import sched
 from framework.accesscontrol import ACLManager, UserPermission
@@ -75,18 +76,21 @@ def edit_user(uid: int):
 
 @UserController.route('/user/<int:uid>')
 def user(uid: int):
-    user = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
+    user: User = User.get_or_none(User.id == uid) or abort(HTTPStatus.NOT_FOUND)
     # TODO: Extract constant
+    perms = UserPermission(cast(int, user.permissions))
     translations = list(user.articles.where(Article.is_original == False).order_by(Article.added.desc()).limit(15).prefetch(User))
     perms_strings = [(p.name, ACLManager.get_permission_color_class(p)) 
-                        for p in ACLManager._expand_permissions(UserPermission(user.permissions))]
+                        for p in ACLManager._expand_permissions(perms)]
     if len(perms_strings) == 0:
         perms_strings = [('ŽÁDNÁ', 'bg-white/5 border-white/20')]
+    is_admin = perms & UserPermission.ADMIN != 0 or perms & UserPermission.MASTER_ADMIN != 0
     return render_template('user.j2',
                            user=user,
                            stats=user.stats.first(),
                            articles=translations,
-                           perms=perms_strings)
+                           perms=perms_strings,
+                           admin=is_admin)
 
 # TODO: Make this and some other destructive routes POST-only
 # TODO: Maybe just hide users instead of deleting them as to not fuck up DB integrity
