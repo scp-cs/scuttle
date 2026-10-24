@@ -1,7 +1,7 @@
 {% extends "base.j2" %}
 
 {% block content %}
-<div class="w-full h-full flex flex-col items-center justify-center">
+<div class="w-full h-full flex flex-col items-center justify-center mt-6 mb-6">
   <h1 class="text-3xl font-bold mb-6">Oprávnění uživatele {{user.nickname}}</h1>
 
   <form method="post" class="flex flex-col items-center">
@@ -11,7 +11,7 @@
       <div class="permission-container">
       <span>
         {{p(class='peer hidden')}}
-        {{p.label(class='permission-toggle w-48 block')}}
+        {{p.label(class='permission-toggle md:w-48 w-36 block')}}
         </span>
         <p class="ml-10 text-sm">
         {{p.description}}

@@ -4,7 +4,6 @@
 @tailwind utilities;
 
 html, body {
-  height: 100% !important;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -131,7 +130,7 @@ td {
   }
 
   .permission-container {
-    @apply py-1 px-2 rounded-md flex flex-row items-center bg-white/5 border border-white/50;
+    @apply py-1 px-2 rounded-md flex flex-col md:flex-row items-center bg-white/5 border border-white/50 gap-3 md:gap-0 justify-center md:justify-normal;
   }
 }
 
