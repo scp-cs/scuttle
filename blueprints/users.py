@@ -151,8 +151,8 @@ def edit_permissions(uid: int):
             flash("Na provedení této operace nemáte oprávnění")
             return redirect(url_for('UserController.user', uid=uid))
 
-        user.permissions = new_perms
         info(f"Permission change {user.permissions} => {new_perms} accepted. Source: {current_user.nickname} (ID: {current_user.id}), Target: {user.nickname} (ID: {user.id})")
+        user.permissions = new_perms
 
     # If we're activating the account, generate a random password
     if form.allow_login.data and user.password is None:
