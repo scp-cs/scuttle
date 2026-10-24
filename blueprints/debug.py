@@ -203,7 +203,7 @@ def normalize_links():
             continue
         link = link.lower().removesuffix('\n')
         parsed = urlparse(link)
-        link = parsed._replace(scheme='http').geturl()
+        link = parsed._replace(scheme='https').geturl()
         # Only save the new link if it doesn't match the old one
         if oldlink != link:
             debug(f"{oldlink.encode('unicode_escape').decode('utf-8')} -> {link}")
