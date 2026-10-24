@@ -201,7 +201,7 @@ def assign_correction(uid: int):
     if not article_id:
         flash('Neplatný článek')
         return result_error('Neplatný článek')
-    check_perms_for_article(article_id)
+
     article = Article.get_or_none(Article.id == article_id)
     if not article:
         flash('Neplatný článek')
@@ -226,7 +226,7 @@ def remove_correction(aid: int):
     if not article:
         flash('Neplatný článek')
         return result_error('Neplatný článek')
-    check_perms_for_article(article.id)
+
 
     article.corrected = None
     article.corrector = None
