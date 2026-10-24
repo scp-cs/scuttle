@@ -1251,12 +1251,12 @@ video {
   margin-top: 1.25rem;
 }
 
-.mt-auto{
-  margin-top: auto;
-}
-
 .mt-6{
   margin-top: 1.5rem;
+}
+
+.mt-auto{
+  margin-top: auto;
 }
 
 .block{
@@ -2524,6 +2524,7 @@ html, body {
   padding: 0;
   box-sizing: border-box;
   font-family: 'IBM Plex Sans';
+  height: 100%;
 }
 
 body {
@@ -2531,6 +2532,7 @@ body {
   background-image: radial-gradient(#333 1px, transparent 0);
   background-size: 40px 40px;
   background-position: -19px -19px;
+  min-height: 100%;
 }
 
 .bg-scp {
@@ -2767,6 +2769,10 @@ td::before{
 
   .md\:h-auto{
     height: auto;
+  }
+
+  .md\:h-full{
+    height: 100%;
   }
 
   .md\:w-1\/2{
