@@ -203,6 +203,8 @@ def normalize_links():
             warning(f'Link missing for {a.name}')
             continue
         link = link.lower().removesuffix('\n')
+        # ! TODO: Remove this!
+        if 'wanderers-library-cs' in link: continue
         parsed = urlparse(link)
         base_wiki = current_app.config.get('WIKI_BASE_URL', None)
 
