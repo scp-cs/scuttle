@@ -191,6 +191,7 @@ def extract_snapshots():
 @login_required
 @log_access
 def normalize_links():
+    # TODO: This breaks WL links
     # Removes trailing newlines from all links in the database
     # Converts all to lowercase
     # And sets the URL scheme to HTTP
@@ -203,7 +204,13 @@ def normalize_links():
             continue
         link = link.lower().removesuffix('\n')
         parsed = urlparse(link)
-        link = parsed._replace(scheme='https').geturl()
+        base_wiki = current_app.config.get('WIKI_BASE_URL', None)
+
+        if not base_wiki:
+            flash('Base wiki URL is not configured')
+            return redirect(url_for('DebugToolsController.debug_index'))
+        
+        link = parsed._replace(scheme='https', netloc=urlparse(base_wiki).netloc).geturl()
         # Only save the new link if it doesn't match the old one
         if oldlink != link:
             debug(f"{oldlink.encode('unicode_escape').decode('utf-8')} -> {link}")

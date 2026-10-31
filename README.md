@@ -64,6 +64,7 @@ cd translatordb_web
         "http://your-backrooms-or-whatever.wikidot.com/feed/site-changes.xml"
     ],
     "FIX_PROXY": [true / false],
+    "BASE_WIKI_URL": "https://something.wikidot.com",
     "BACKUP": {
         "WIKICOMMA_START_METHOD": ["container" / "command"],
         "PORTAINER": {
